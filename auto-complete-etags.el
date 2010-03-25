@@ -3,7 +3,7 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id: auto-complete-etags.el,v 0.2 2009/04/23 00:38:01 coldnew Exp $
+;; Version: $Id: auto-complete-etags.el,v 1.1 2010/03/25 00:54:05 whitypig Exp whitypig $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -30,11 +30,9 @@
 
 ;;; Code:
 
-(provide 'auto-complete-etags)
 (require 'auto-complete)
 (eval-when-compile
   (require 'cl))
-
 
 ;;;;##########################################################################
 ;;;;  User Options, Variables
@@ -48,13 +46,17 @@
   '((t (:background "deep sky blue" :foreground "white")))
   "Face for the etags selected candidate.")
 
+(defun ac-etags-candidate ()
+  (when tags-file-name
+    (ignore-errors
+      (all-completions ac-target (tags-completion-table)))))
+
 (defvar ac-source-etags
-  '((candidates . (lambda () 
-         (all-completions ac-target (tags-completion-table))))
+  '((candidates . ac-etags-candidate)
     (candidate-face . ac-etags-candidate-face)
     (selection-face . ac-etags-selection-face)
     (requires . 3))
   "Source for etags.")
 
-
+(provide 'auto-complete-etags)
 ;;; auto-complete-etags.el ends here
