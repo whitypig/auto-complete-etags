@@ -3,7 +3,7 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id: auto-complete-etags.el,v 1.1 2010/03/25 00:54:05 whitypig Exp whitypig $
+;; Version: $Id: auto-complete-etags.el,v 1.2 2010/03/25 01:24:42 whitypig Exp whitypig $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -49,7 +49,8 @@
 (defun ac-etags-candidate ()
   (when tags-file-name
     (ignore-errors
-      (all-completions ac-target (tags-completion-table)))))
+      (let ((tags-completion-table nil))
+        (all-completions ac-target (tags-completion-table))))))
 
 (defvar ac-source-etags
   '((candidates . ac-etags-candidate)
