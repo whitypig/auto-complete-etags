@@ -3,7 +3,7 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id: auto-complete-etags.el,v 1.2 2010/03/25 01:24:42 whitypig Exp whitypig $
+;; Version: $Id: auto-complete-etags.el,v 1.3 2010/03/25 03:34:27 whitypig Exp whitypig $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -49,14 +49,13 @@
 (defun ac-etags-candidate ()
   (when tags-file-name
     (ignore-errors
-      (let ((tags-completion-table nil))
-        (all-completions ac-target (tags-completion-table))))))
+        (all-completions ac-target (tags-completion-table)))))
 
 (defvar ac-source-etags
   '((candidates . ac-etags-candidate)
     (candidate-face . ac-etags-candidate-face)
     (selection-face . ac-etags-selection-face)
-    (requires . 3))
+    (requires . 2))
   "Source for etags.")
 
 (provide 'auto-complete-etags)
