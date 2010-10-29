@@ -3,7 +3,7 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id: auto-complete-etags.el,v 1.3 2010/03/25 03:34:27 whitypig Exp whitypig $
+;; Version: $Id: auto-complete-etags.el,v 1.4 2010/04/06 06:40:57 whitypig Exp whitypig $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -46,10 +46,23 @@
   '((t (:background "deep sky blue" :foreground "white")))
   "Face for the etags selected candidate.")
 
+(defvar ac-etags-candidates-limit 40
+  "The number of candidates to popup.
+nil means there is no limit about it.")
+
 (defun ac-etags-candidate ()
   (when tags-file-name
     (ignore-errors
-        (all-completions ac-target (tags-completion-table)))))
+      (let ((candidates (all-completions ac-target (tags-completion-table)))
+            (ret nil))
+        (cond
+         ((and (numberp ac-etags-candidates-limit)
+               (< ac-etags-candidates-limit (length candidates)))
+          (dotimes (i ac-etags-candidates-limit)
+            (add-to-list 'ret (nth i candidates) t)))
+         (t
+          (setq ret candidates)))
+        ret))))
 
 (defvar ac-source-etags
   '((candidates . ac-etags-candidate)
