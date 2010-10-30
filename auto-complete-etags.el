@@ -3,7 +3,7 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id: auto-complete-etags.el,v 1.4 2010/04/06 06:40:57 whitypig Exp whitypig $
+;; Version: $Id$
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -50,10 +50,31 @@
   "The number of candidates to popup.
 nil means there is no limit about it.")
 
+(defvar ac-etags-tags-current-completion-table nil
+  "Current etags completion table for tags.")
+
+(defvar ac-etags-current-tags-file-name tags-file-name
+  "The name of the currently-chosen tags file name.")
+
+(defvar ac-etags-current-tags-table-list tags-table-list
+  "The name of the currently-chosen tags table.")
+
+(defun ac-etags-init ()
+  "Initialization function for ac-etags."
+  (unless (or (equal tags-table-list
+                     ac-etags-current-tags-table-list)
+              (equal tags-file-name
+                     ac-etags-current-tags-file-name))
+    (setq ac-etags-tags-current-completion-table (tags-completion-table))
+    (setq ac-etags-current-tags-file-name tags-file-name)
+    (setq ac-etags-current-tags-table-list tags-table-list)))
+
 (defun ac-etags-candidate ()
-  (when tags-file-name
-    (ignore-errors
-      (let ((candidates (all-completions ac-target (tags-completion-table)))
+  (when (or tags-file-name tags-table-list)
+    (ac-etags-init)
+    ;; the following ignore-errors is commented out for debugging purpose
+    ;(ignore-errors
+      (let ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
             (ret nil))
         (cond
          ((and (numberp ac-etags-candidates-limit)
@@ -62,7 +83,7 @@ nil means there is no limit about it.")
             (add-to-list 'ret (nth i candidates) t)))
          (t
           (setq ret candidates)))
-        ret))))
+        ret)));)
 
 (defvar ac-source-etags
   '((candidates . ac-etags-candidate)
