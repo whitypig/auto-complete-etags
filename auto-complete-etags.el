@@ -3,7 +3,8 @@
 ;; Copyright 2009 Yen-Chin,Lee
 ;;
 ;; Author: Yen-Chin,Lee
-;; Version: $Id$
+;; Modified by: whitypig
+;; Version: $Id: auto-complete-etags.el,v 1.6 2010/10/30 17:47:03 whitypig Exp whitypig $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
