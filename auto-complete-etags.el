@@ -4,7 +4,7 @@
 ;;
 ;; Author: Yen-Chin,Lee
 ;; Modified by: whitypig
-;; Version: $Id: auto-complete-etags.el,v 1.6 2010/10/30 17:47:03 whitypig Exp whitypig $
+;; Version: $Id$
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -55,10 +55,14 @@ nil means there is no limit about it.")
   "Current etags completion table for tags.")
 
 (defvar ac-etags-current-tags-file-name tags-file-name
-  "The name of the currently-chosen tags file name.")
+  "The name of the currently-chosen tags file name.
+
+`tags-file-name' is defined in etasg.el")
 
 (defvar ac-etags-current-tags-table-list tags-table-list
-  "The name of the currently-chosen tags table.")
+  "The name of the currently-chosen tags table.
+
+`tags-table-list is defined in etags.el'")
 
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
