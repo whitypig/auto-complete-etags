@@ -4,7 +4,7 @@
 ;;
 ;; Author: Yen-Chin,Lee
 ;; Modified by: whitypig
-;; Version: $Id$
+;; Version: $Id: auto-complete-etags.el,v 1.8 2010/10/31 05:05:03 whitypig Exp $
 ;; Keywords: 
 ;; X-URL: not distributed yet
 
@@ -66,29 +66,29 @@ nil means there is no limit about it.")
 
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
-  (unless (or (equal tags-table-list
-                     ac-etags-current-tags-table-list)
-              (equal tags-file-name
-                     ac-etags-current-tags-file-name))
+  (unless (and
+           ;; tags-file-name and tags-table-list are defined in `etags.el'
+           (equal tags-table-list
+                  ac-etags-current-tags-table-list)
+           (equal tags-file-name
+                  ac-etags-current-tags-file-name))
     (setq ac-etags-tags-current-completion-table (tags-completion-table))
     (setq ac-etags-current-tags-file-name tags-file-name)
     (setq ac-etags-current-tags-table-list tags-table-list)))
 
 (defun ac-etags-candidate ()
+  ;; These two variables are defined in `etags.el'
   (when (or tags-file-name tags-table-list)
+    ;; If at least one tags table is selected, initialize completion table.
     (ac-etags-init)
     ;; the following ignore-errors is commented out for debugging purpose
     ;(ignore-errors
-      (let ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
-            (ret nil))
-        (cond
-         ((and (numberp ac-etags-candidates-limit)
-               (< ac-etags-candidates-limit (length candidates)))
-          (dotimes (i ac-etags-candidates-limit)
-            (add-to-list 'ret (nth i candidates) t)))
-         (t
-          (setq ret candidates)))
-        ret)));)
+      (let* ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
+            (len (length candidates)))
+        (when (and (numberp ac-etags-candidates-limit)
+                    (< ac-etags-candidates-limit len))
+          (nbutlast candidates (- len ac-etags-candidates-limit)))
+        candidates)))
 
 (defvar ac-source-etags
   '((candidates . ac-etags-candidate)
