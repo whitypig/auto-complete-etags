@@ -81,8 +81,6 @@ nil means there is no limit about it.")
   (when (or tags-file-name tags-table-list)
     ;; If at least one tags table is selected, initialize completion table.
     (ac-etags-init)
-    ;; the following ignore-errors is commented out for debugging purpose
-    ;(ignore-errors
       (let* ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
             (len (length candidates)))
         (when (and (numberp ac-etags-candidates-limit)
