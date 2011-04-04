@@ -99,12 +99,8 @@ nil means there is no limit about it.")
             (set-buffer (get-file-buffer e))
             (goto-char (point-min))
             ;; @todo What to do when there are multiple signatures for ITEM?
-            (when (or (save-excursion
-                        (re-search-forward
-                         (concat "^\\([^ ()#]+ +" item "([^);]*)\\);.*$") nil t))
-                      (save-excursion
-                        (re-search-forward
-                         (concat "^[^ ]+[ ]+\\([^ ()#]+ +" item "([^);]*)\\);.*$") nil t)))
+            (when (re-search-forward (concat "^\\(.*(.*).*\\);" item ".*$") nil t)
+              ;; For now, we only search for a function having ITEM as its name.
               (setq s (buffer-substring (match-beginning 1) (match-end 1)))
               (setq ret (ac-etags-cleanup-document s))))
           (return-from ac-etags-search-for-signature-block ret))))
