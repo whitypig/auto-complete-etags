@@ -89,11 +89,29 @@ nil means there is no limit about it.")
         candidates)))
 
 (defun ac-etags-search-for-signature (item)
-  ""
-  "hi")
+  "Search for and return the signature for ITEM."
+  (let ((ret "No documentation found.") s)
+    ;(messge (format "ac-etags-search-for-signature called with %s" item))
+    (block ac-etags-search-for-signature-block
+      (when (listp tags-table-list)
+        (dolist (e tags-table-list)
+          (save-excursion
+            (set-buffer (get-file-buffer e))
+            (goto-char (point-min))
+            ;; @todo what to do when there are multiple signatures with the same name?
+            (when (or (save-excursion
+                        (re-search-forward
+                         (concat "^[^ ]+[ ]+\\([^ ()#]+ +" item "(.*)\\).*$") nil t))
+                      (save-excursion
+                        (re-search-forward
+                         (concat "^\\([^ ()#]+ +" item "(.*)\\).*$") nil t)))
+              (setq ret (buffer-substring (match-beginning 1) (match-end 1)))))
+          (return-from ac-etags-search-for-signature-block ret))))
+    ret))
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
+  ;; debug purpose
   (message (format "ac-etags-document called with %s" item))
   (ac-etags-search-for-signature item))
 
