@@ -88,6 +88,8 @@ nil means there is no limit about it.")
           (nbutlast candidates (- len ac-etags-candidates-limit)))
         candidates)))
 
+;; @bug When a function signature spans multiples lines, we cannot
+;; find the signature.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let ((ret "No documentation found.") (s nil) (case-fold-search nil))
