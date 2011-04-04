@@ -90,7 +90,7 @@ nil means there is no limit about it.")
 
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
-  (let ((ret "No documentation found.") s)
+  (let ((ret "No documentation found.") (s nil) (case-fold-search nil))
     ;(messge (format "ac-etags-search-for-signature called with %s" item))
     (block ac-etags-search-for-signature-block
       (when (listp tags-table-list)
@@ -98,21 +98,25 @@ nil means there is no limit about it.")
           (save-excursion
             (set-buffer (get-file-buffer e))
             (goto-char (point-min))
-            ;; @todo what to do when there are multiple signatures with the same name?
+            ;; @todo What to do when there are multiple signatures for ITEM?
             (when (or (save-excursion
                         (re-search-forward
-                         (concat "^[^ ]+[ ]+\\([^ ()#]+ +" item "(.*)\\).*$") nil t))
+                         (concat "^\\([^ ()#]+ +" item "([^);]*)\\);.*$") nil t))
                       (save-excursion
                         (re-search-forward
-                         (concat "^\\([^ ()#]+ +" item "(.*)\\).*$") nil t)))
-              (setq ret (buffer-substring (match-beginning 1) (match-end 1)))))
+                         (concat "^[^ ]+[ ]+\\([^ ()#]+ +" item "([^);]*)\\);.*$") nil t)))
+              (setq s (buffer-substring (match-beginning 1) (match-end 1)))
+              (setq ret (ac-etags-cleanup-document s))))
           (return-from ac-etags-search-for-signature-block ret))))
     ret))
 
+(defun ac-etags-cleanup-document (str)
+  "Replace multiples spaces with a single space."
+  (when (stringp str)
+    (setq str (replace-regexp-in-string "[ ]+" " " str))))
+
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  ;; debug purpose
-  (message (format "ac-etags-document called with %s" item))
   (ac-etags-search-for-signature item))
 
 ;; Define ac-source-etags
