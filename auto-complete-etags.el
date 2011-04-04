@@ -88,12 +88,22 @@ nil means there is no limit about it.")
           (nbutlast candidates (- len ac-etags-candidates-limit)))
         candidates)))
 
-(defvar ac-source-etags
+(defun ac-etags-search-for-signature (item)
+  ""
+  "hi")
+
+(defun ac-etags-document (item)
+  "Return documentation corresponding to ITEM."
+  (message (format "ac-etags-document called with %s" item))
+  (ac-etags-search-for-signature item))
+
+;; Define ac-source-etags
+(ac-define-source etags
   '((candidates . ac-etags-candidate)
     (candidate-face . ac-etags-candidate-face)
     (selection-face . ac-etags-selection-face)
-    (requires . 2))
-  "Source for etags.")
+    (document . ac-etags-document)
+    (requires . 2)))
 
 (provide 'auto-complete-etags)
 ;;; auto-complete-etags.el ends here
