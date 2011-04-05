@@ -94,7 +94,9 @@ nil means there is no limit about it.")
   "Search for and return the signature for ITEM."
   (let ((ret "No documentation found.") (case-fold-search nil)
         (b nil) (line nil))
-    (when (and tags-table-list (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
+    (when (and (equal major-mode 'c-mode)
+               tags-table-list
+               (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
       ;; @todo We want to close the buffer if it was yet to be visited.
       (save-excursion
         (set-buffer b)
