@@ -92,20 +92,56 @@ nil means there is no limit about it.")
 ;; find the signature.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
-  (let ((ret "No documentation found.") (s nil) (case-fold-search nil))
-    ;(messge (format "ac-etags-search-for-signature called with %s" item))
-    (block ac-etags-search-for-signature-block
-      (when (listp tags-table-list)
-        (dolist (e tags-table-list)
-          (save-excursion
-            (set-buffer (get-file-buffer e))
-            (goto-char (point-min))
-            ;; @todo What to do when there are multiple signatures for ITEM?
-            (when (re-search-forward (concat "^\\(.*(.*)\\)[;]*" item ".*$") nil t)
-              ;; For now, we only search for a function having ITEM as its name.
-              (setq s (buffer-substring (match-beginning 1) (match-end 1)))
-              (setq ret (ac-etags-cleanup-document s))))
-          (return-from ac-etags-search-for-signature-block ret))))
+  (let ((ret "No documentation found.") (case-fold-search nil)
+        (b nil) (line nil))
+    (when (and tags-table-list (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
+      ;; @todo We want to close the buffer if it was yet to be visited.
+      (save-excursion
+        (set-buffer b)
+        (setq line (ac-etags-get-line (point)))
+        (when (and line (ac-etags-is-function-maybe item line))
+          (setq ret line)
+          ;; Check if this line contains the return-type.
+          (when (and ret (string-match (concat "^" item) ret))
+            (setq ret (concat (ac-etags-get-return-type) " " ret)))
+          ;; Check if this line contains all the arguments of this function.
+          (when (and ret (not (string-match "[);]$" ret)))
+            (setq ret (concat ret (ac-etags-get-function-arguments))))))
+      (setq ret (replace-regexp-in-string ";" "" ret))
+      (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret)))
+    ret))
+
+(defun ac-etags-is-function-maybe (name line)
+  "Return t if LINE contains \"NAME(.*)\"."
+  (save-match-data
+    (and (not (string-match "[#=/\\]" line))  ; exclude macro, enum, etc.
+         (string-match (concat name "(") line))))
+
+(defun ac-etags-get-line (point)
+  "Return the line containing POINT."
+  (let ((line nil))
+    (buffer-substring-no-properties
+     (save-excursion (beginning-of-line) (point))
+     (save-excursion (end-of-line) (point)))))
+
+(defun ac-etags-get-return-type ()
+  "Return the line containing return-type.
+We assume that current point must be on the function name. In
+fact, this fucntion just returns a line one-line above `point'."
+  (save-excursion
+    (forward-line -1)
+    (beginning-of-line)
+    (ac-etags-get-line (point))))
+
+(defun ac-etags-get-function-arguments ()
+  "Return the string containing arguments declaration that
+follows the current line."
+  (let ((ret nil))
+    (save-excursion
+      (forward-line 1)
+      (beginning-of-line)
+      (setq ret (buffer-substring-no-properties (point) (re-search-forward ")"))))
+    (setq ret (replace-regexp-in-string "[ \t\n]+" " " ret))
     ret))
 
 (defun ac-etags-cleanup-document (str)
