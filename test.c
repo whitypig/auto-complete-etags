@@ -14,7 +14,7 @@ multiple_line_func(void)
   return 1;
 }
 
-const char *
+const char*
 multiple_line_va_arg_func(int a,
                           int b,
                           ...)
