@@ -1,0 +1,2 @@
+(require 'auto-complete-etags)
+
