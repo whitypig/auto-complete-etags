@@ -23,7 +23,8 @@
 ;; Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;; Commentary:
-
+;; TODO: Put searched signatures into the cache.
+;; BUG: Source file which has searching tag is somehow modified.
 ;; 
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
@@ -93,7 +94,11 @@ nil means there is no limit about it.")
   "Search for and return the signature for ITEM."
   (let ((ret "No documentation found.") (case-fold-search nil)
         (b nil) (line nil)
-        (buffers (ac-etags-collect-tags-table-mode-buffers)))
+        (buffers (ac-etags-collect-tags-table-mode-buffers))
+        ;; Shadow etags global variables because we don't want to change them.
+        (tags-location-ring (make-ring find-tag-marker-ring-length))
+        (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
+        (last-tag nil))
     ;; For now, we only support c-mode.
     (when (and (equal major-mode 'c-mode)
                tags-table-list
@@ -121,11 +126,10 @@ nil means there is no limit about it.")
          (string-match (concat name "(") line))))
 
 (defun ac-etags-get-line (point)
-  "Return the line containing POINT."
-  (let ((line nil))
-    (buffer-substring-no-properties
-     (save-excursion (beginning-of-line) (point))
-     (save-excursion (end-of-line) (point)))))
+  "Return the line on which POINT is."
+  (buffer-substring-no-properties
+   (save-excursion (beginning-of-line) (point))
+   (save-excursion (end-of-line) (point))))
 
 (defun ac-etags-get-return-type ()
   "Return the line containing return-type.
@@ -154,7 +158,7 @@ follows the current line."
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (let ((sig (ac-etags-search-for-signature item)))
+  (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
     (when (stringp sig)
       (message "%s"sig))
     sig))
