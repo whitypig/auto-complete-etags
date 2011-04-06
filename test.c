@@ -3,7 +3,7 @@ void simple_func(void)
 }
 
 void simple_func2(int a,
-                 int b)
+                  int b)
 {
   return;
 }
