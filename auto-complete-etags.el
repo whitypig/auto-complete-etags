@@ -88,17 +88,16 @@ nil means there is no limit about it.")
           (nbutlast candidates (- len ac-etags-candidates-limit)))
         candidates)))
 
-;; @bug When a function signature spans multiples lines, we cannot
-;; find the signature.
+;; @todo What to do when multiple tags matche item.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let ((ret "No documentation found.") (case-fold-search nil)
-        (b nil) (line nil))
+        (b nil) (line nil)
+        (buffers (ac-etags-collect-tags-table-mode-buffers)))
     ;; For now, we only support c-mode.
     (when (and (equal major-mode 'c-mode)
                tags-table-list
                (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
-      ;; @todo We want to close the buffer if it was yet to be visited.
       (save-excursion
         (set-buffer b)
         (setq line (ac-etags-get-line (point)))
@@ -110,6 +109,7 @@ nil means there is no limit about it.")
           ;; Check if this line contains all the arguments of this function.
           (when (and ret (not (string-match "[);]$" ret)))
             (setq ret (concat ret (ac-etags-get-function-arguments))))))
+      (when (not (member b buffers)) (kill-buffer b))
       (setq ret (replace-regexp-in-string ";" "" ret))
       (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret)))
     ret))
@@ -154,7 +154,19 @@ follows the current line."
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (ac-etags-search-for-signature item))
+  (let ((sig (ac-etags-search-for-signature item)))
+    (when (stringp sig)
+      (message "%s"sig))
+    sig))
+
+(defun ac-etags-collect-tags-table-mode-buffers ()
+  (let ((ret nil) (l (buffer-list)))
+    (dolist (b l)
+      (save-excursion
+        (set-buffer b)
+        (when (equal major-mode 'c-mode)
+          (add-to-list 'ret b))))
+    (nreverse ret)))
 
 ;; Define ac-source-etags
 (ac-define-source etags
