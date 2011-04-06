@@ -92,28 +92,30 @@ nil means there is no limit about it.")
 ;; @todo What to do when multiple tags matche item.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
-  (let ((ret "No documentation found.") (case-fold-search nil)
-        (b nil) (line nil)
-        (buffers (ac-etags-collect-tags-table-mode-buffers))
+  (let* ((ret "No documentation found.") (case-fold-search nil)
+        (b nil) (line nil) (mode 'c-mode)
+        (buffers (ac-etags-collect-buffers-by-major-mode mode))
         ;; Shadow etags global variables because we don't want to change them.
         (tags-location-ring (make-ring find-tag-marker-ring-length))
         (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
         (last-tag nil))
     ;; For now, we only support c-mode.
-    (when (and (equal major-mode 'c-mode)
+    (when (and (equal major-mode mode)
                tags-table-list
                (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
       (save-excursion
         (set-buffer b)
+        ;; We set the buffer read-only to avoid the bug.
+        (toggle-read-only 1)
         (setq line (ac-etags-get-line (point)))
         (when (and line (ac-etags-is-function-maybe item line))
           (setq ret line)
           ;; Check if this line contains the return-type.
           (when (and ret (string-match (concat "^" item) ret))
-            (setq ret (concat (ac-etags-get-return-type) " " ret)))
+            (setq ret (concat (ac-etags-get-return-type b (point)) " " ret)))
           ;; Check if this line contains all the arguments of this function.
           (when (and ret (not (string-match "[);]$" ret)))
-            (setq ret (concat ret (ac-etags-get-function-arguments))))))
+            (setq ret (concat ret (ac-etags-get-function-arguments b (point)))))))
       (when (not (member b buffers)) (kill-buffer b))
       (setq ret (replace-regexp-in-string ";" "" ret))
       (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret)))
@@ -131,20 +133,23 @@ nil means there is no limit about it.")
    (save-excursion (beginning-of-line) (point))
    (save-excursion (end-of-line) (point))))
 
-(defun ac-etags-get-return-type ()
+(defun ac-etags-get-return-type (buffer pos)
   "Return the line containing return-type.
 We assume that current point must be on the function name. In
-fact, this fucntion just returns a line one-line above `point'."
+fact, this fucntion just returns a line one-line above POS."
   (save-excursion
+    (set-buffer buffer)
+    (goto-char pos)
     (forward-line -1)
-    (beginning-of-line)
     (ac-etags-get-line (point))))
 
-(defun ac-etags-get-function-arguments ()
+(defun ac-etags-get-function-arguments (buffer pos)
   "Return the string containing arguments declaration that
 follows the current line."
   (let ((ret nil))
     (save-excursion
+      (set-buffer buffer)
+      (goto-char pos)
       (forward-line 1)
       (beginning-of-line)
       (setq ret (buffer-substring-no-properties (point) (re-search-forward ")"))))
@@ -163,12 +168,12 @@ follows the current line."
       (message "%s"sig))
     sig))
 
-(defun ac-etags-collect-tags-table-mode-buffers ()
+(defun ac-etags-collect-buffers-by-major-mode (mode)
   (let ((ret nil) (l (buffer-list)))
     (dolist (b l)
       (save-excursion
         (set-buffer b)
-        (when (equal major-mode 'c-mode)
+        (when (equal major-mode mode)
           (add-to-list 'ret b))))
     (nreverse ret)))
 
