@@ -1,18 +1,19 @@
 ;;; auto-complete-etags.el --- 
 
 ;; Copyright 2009 Yen-Chin,Lee
+;;           2010, 2011 whitypig <whitypig@gmail.com>
 ;;
+
 ;; Author: Yen-Chin,Lee
-;; Modified by: whitypig
-;; Version: $Id: auto-complete-etags.el,v 1.8 2010/10/31 05:05:03 whitypig Exp $
-;; Keywords: 
+;;         whtiypig <whitypig@gmail.com>
+;; Keywords: auto-complete-mode etags
 ;; X-URL: not distributed yet
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation; either version 2, or (at your option)
 ;; any later version.
-;;
+
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -23,7 +24,7 @@
 ;; Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 
 ;;; Commentary:
-;; TODO: Put searched signatures into the cache.
+;; TODO: Put searched signatures into cache.
 ;; BUG: Source file which has searching tag is somehow modified.
 ;; 
 
