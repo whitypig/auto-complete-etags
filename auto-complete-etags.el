@@ -111,7 +111,12 @@ nil means there is no limit about it.")
         (setq line (thing-at-point 'line))
         (when (string-match "(" line)
           ;; This is probably a function.
-          (if (bolp) (forward-line -1))
+          (when (string= item (buffer-substring-no-properties
+                               (point)
+                               (save-excursion
+                                 (skip-chars-forward "^(")
+                                 (point))))
+            (forward-line -1))
           (setq ret (buffer-substring-no-properties (point)
                                                     (save-excursion (skip-chars-forward "^{;")
                                                                     (point)))))
