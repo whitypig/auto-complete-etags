@@ -31,29 +31,6 @@
     (test-ac-etags-search-for-signature "foo"))
   )
 
-;; Tests for ac-etags-get-line
-(expectations
-  (expect "(require 'auto-complete-etags)"
-    (save-excursion (goto-char (point-min))
-                    (ac-etags-get-line (point)))))
-
-;; Tests for ac-etags-get-return-type
-(expectations
-  (expect "(require 'auto-complete-etags)"
-    (save-excursion (goto-char (point-min))
-                    (forward-line)
-                    (ac-etags-get-return-type (current-buffer)
-                                              (save-excursion
-                                                (goto-char (point-min))
-                                                (forward-line)
-                                                (point))))))
-
-;; Tests for ac-etags-get-function-arguments
-(expectations
-  (expect " int b, ...)"
-    (save-excursion
-      (ac-etags-get-function-arguments (get-buffer "test.c") 163))))
-
 ;; Tests for ac-etags-is-function
 (expectations
   (expect (non-nil) (ac-etags-is-function-maybe "f" "f(void)"))
