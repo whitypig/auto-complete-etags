@@ -123,11 +123,10 @@ nil means there is no limit about it.")
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (save-excursion
-    (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
-      (when (stringp sig)
-        (message "%s"sig))
-      sig)))
+  (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
+    (when (stringp sig)
+      (message "%s"sig))
+    sig))
 
 (defun ac-etags-collect-buffers-by-major-mode (mode)
   (let ((ret nil) (l (buffer-list)))
