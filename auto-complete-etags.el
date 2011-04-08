@@ -108,66 +108,26 @@ nil means there is no limit about it.")
         (set-buffer b)
         ;; We set the buffer read-only to avoid the bug.
         (toggle-read-only 1)
-        (setq line (ac-etags-get-line (point)))
-        (when (and line (ac-etags-is-function-maybe item line))
-          (setq ret line)
-          ;; Check if this line contains the return-type.
-          (when (and ret (string-match (concat "^" item) ret))
-            (setq ret (concat (ac-etags-get-return-type b (point)) " " ret)))
-          ;; Check if this line contains all the arguments of this function.
-          (when (and ret (not (string-match "[);]$" ret)))
-            (setq ret (concat ret (ac-etags-get-function-arguments b (point)))))))
-      (when (not (member b buffers)) (kill-buffer b))
-      (setq ret (replace-regexp-in-string ";" "" ret))
-      (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret)))
+        (setq line (thing-at-point 'line))
+        (when (string-match "(" line)
+          ;; This is probably a function.
+          (if (bolp) (forward-line -1))
+          (setq ret (buffer-substring-no-properties (point)
+                                                    (save-excursion (skip-chars-forward "^{;")
+                                                                    (point)))))
+        (when (not (member b buffers)) (kill-buffer b))
+        (setq ret (replace-regexp-in-string ";" "" ret))
+        (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret))
+        (setq ret (replace-regexp-in-string "\\(^ \\| $\\)" "" ret))))
     ret))
-
-(defun ac-etags-is-function-maybe (name line)
-  "Return t if LINE contains \"NAME(.*)\"."
-  (save-match-data
-    (and (not (string-match "[#=/\\]" line))  ; exclude macro, enum, etc.
-         (string-match (concat name "(") line))))
-
-(defun ac-etags-get-line (point)
-  "Return the line on which POINT is."
-  (buffer-substring-no-properties
-   (save-excursion (beginning-of-line) (point))
-   (save-excursion (end-of-line) (point))))
-
-(defun ac-etags-get-return-type (buffer pos)
-  "Return the line containing return-type.
-We assume that current point must be on the function name. In
-fact, this fucntion just returns a line one-line above POS."
-  (save-excursion
-    (set-buffer buffer)
-    (goto-char pos)
-    (forward-line -1)
-    (ac-etags-get-line (point))))
-
-(defun ac-etags-get-function-arguments (buffer pos)
-  "Return the string containing arguments declaration that
-follows the current line."
-  (let ((ret nil))
-    (save-excursion
-      (set-buffer buffer)
-      (goto-char pos)
-      (forward-line 1)
-      (beginning-of-line)
-      (setq ret (buffer-substring-no-properties (point) (re-search-forward ")"))))
-    (setq ret (replace-regexp-in-string "[ \t\n]+" " " ret))
-    ret))
-
-(defun ac-etags-cleanup-document (str)
-  "Replace multiples spaces with a single space."
-  (when (stringp str)
-    (setq str (replace-regexp-in-string "[ ]+" " " str))))
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
-    (when (stringp sig)
-      (message "%s"sig))
-    sig))
+  (save-excursion
+    (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
+      (when (stringp sig)
+        (message "%s"sig))
+      sig)))
 
 (defun ac-etags-collect-buffers-by-major-mode (mode)
   (let ((ret nil) (l (buffer-list)))
