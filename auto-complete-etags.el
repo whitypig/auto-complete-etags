@@ -53,6 +53,9 @@
   "The number of candidates to popup.
 nil means there is no limit about it.")
 
+(defvar ac-etags-need-document t
+  "Set this to t when you want to see sunction signatures.")
+
 (defvar ac-etags-tags-current-completion-table nil
   "Current etags completion table for tags.")
 
@@ -128,10 +131,11 @@ nil means there is no limit about it.")
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
-    (when (stringp sig)
-      (message "%s"sig))
-    sig))
+  (when ac-etags-need-document
+    (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
+      (when (stringp sig)
+        (message "%s"sig))
+      sig)))
 
 (defun ac-etags-collect-buffers-by-major-mode (mode)
   (let ((ret nil) (l (buffer-list)))
