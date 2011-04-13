@@ -37,6 +37,11 @@
 (eval-when-compile
   (require 'cl))
 
+(defadvice ac-inline-hide (around ac-etags-ac-inline-hide-around-ad activate)
+  (when (and (member 'ac-source-etags 'ac-sources)
+             (eq ac-buffer (current-buffer)))
+    ad-do-it))
+
 ;;;;##########################################################################
 ;;;;  User Options, Variables
 ;;;;##########################################################################
@@ -109,8 +114,7 @@ nil means there is no limit about it.")
         (when (and (equal major-mode mode)
                    tags-table-list
                    (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
-          (save-excursion
-            (set-buffer b)
+          (with-current-buffer b
             (setq line (thing-at-point 'line))
             (when (string-match "(" line)
               ;; This is probably a function.
@@ -121,7 +125,7 @@ nil means there is no limit about it.")
                                      (point))))
                 (forward-line -1))
               (setq ret (buffer-substring-no-properties (point)
-                                                        (save-excursion (skip-chars-forward "^{;")
+                                                        (save-excursion (skip-chars-forward "^{;\\\\")
                                                                         (point)))))
             (setq ret (replace-regexp-in-string ";" "" ret))
             (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret))
