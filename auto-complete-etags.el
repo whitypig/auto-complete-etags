@@ -26,6 +26,8 @@
 ;;; Commentary:
 ;; TODO: Put searched signatures into cache.
 ;; BUG: Source file which has searching tag is somehow modified.
+;; BUG: After showing document, extra new lines are inserted in the current buffer.
+;; BUG: Unnecessary marks are set.
 ;; 
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
