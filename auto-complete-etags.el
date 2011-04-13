@@ -94,39 +94,40 @@ nil means there is no limit about it.")
         candidates)))
 
 ;; @todo What to do when multiple tags matche item.
+;; @bug failed to kill a buffer jumped on if the user do C-g.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
         (b nil) (line nil) (mode 'c-mode)
-        (buffers (ac-etags-collect-buffers-by-major-mode mode))
+        (buffers (buffer-list))
         ;; Shadow etags global variables because we don't want to change them.
         (tags-location-ring (make-ring find-tag-marker-ring-length))
         (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
         (last-tag nil))
     ;; For now, we only support c-mode.
-    (when (and (equal major-mode mode)
-               tags-table-list
-               (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
-      (save-excursion
-        (set-buffer b)
-        ;; We set the buffer read-only to avoid the bug.
-        (toggle-read-only 1)
-        (setq line (thing-at-point 'line))
-        (when (string-match "(" line)
-          ;; This is probably a function.
-          (when (string= item (buffer-substring-no-properties
-                               (point)
-                               (save-excursion
-                                 (skip-chars-forward "^(")
-                                 (point))))
-            (forward-line -1))
-          (setq ret (buffer-substring-no-properties (point)
-                                                    (save-excursion (skip-chars-forward "^{;")
-                                                                    (point)))))
-        (when (not (member b buffers)) (kill-buffer b))
-        (setq ret (replace-regexp-in-string ";" "" ret))
-        (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret))
-        (setq ret (replace-regexp-in-string "\\(^ \\| $\\)" "" ret))))
+    (unwind-protect
+        (when (and (equal major-mode mode)
+                   tags-table-list
+                   (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
+          (save-excursion
+            (set-buffer b)
+            (setq line (thing-at-point 'line))
+            (when (string-match "(" line)
+              ;; This is probably a function.
+              (when (string= item (buffer-substring-no-properties
+                                   (point)
+                                   (save-excursion
+                                     (skip-chars-forward "^(")
+                                     (point))))
+                (forward-line -1))
+              (setq ret (buffer-substring-no-properties (point)
+                                                        (save-excursion (skip-chars-forward "^{;")
+                                                                        (point)))))
+            (setq ret (replace-regexp-in-string ";" "" ret))
+            (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret))
+            (setq ret (replace-regexp-in-string "\\(^ \\| $\\)" "" ret))))
+      (when (and b (not (member b buffers)))
+        (kill-buffer b)))
     ret))
 
 (defun ac-etags-document (item)
