@@ -58,7 +58,7 @@
   "The number of candidates to popup.
 nil means there is no limit about it.")
 
-(defvar ac-etags-need-document t
+(defvar ac-etags-use-document t
   "Set this to t when you want to see sunction signatures.")
 
 (defvar ac-etags-tags-current-completion-table nil
@@ -73,6 +73,11 @@ nil means there is no limit about it.")
   "The name of the currently-chosen tags table.
 
 `tags-table-list is defined in etags.el'")
+
+(defvar ac-etags-document-functions
+  '((c-mode ac-etags-get-c-mode-document)))
+
+(defconst ac-etags-document-not-found-message "No documentaion found.")
 
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
@@ -99,44 +104,52 @@ nil means there is no limit about it.")
         candidates)))
 
 ;; @todo What to do when multiple tags matche item.
-;; @bug failed to kill a buffer jumped on if the user do C-g.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
-        (b nil) (line nil) (mode 'c-mode)
-        (buffers (buffer-list))
+        (b nil) (line nil) (mode 'c-mode) (buffers (buffer-list))
         ;; Shadow etags global variables because we don't want to change them.
         (tags-location-ring (make-ring find-tag-marker-ring-length))
         (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
         (last-tag nil))
-    ;; For now, we only support c-mode.
     (unwind-protect
-        (when (and (equal major-mode mode)
-                   tags-table-list
+        (when (and tags-table-list
                    (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
-          (with-current-buffer b
-            (setq line (thing-at-point 'line))
-            (when (string-match "(" line)
-              ;; This is probably a function.
-              (when (string= item (buffer-substring-no-properties
-                                   (point)
-                                   (save-excursion
-                                     (skip-chars-forward "^(")
-                                     (point))))
-                (forward-line -1))
-              (setq ret (buffer-substring-no-properties (point)
-                                                        (save-excursion (skip-chars-forward "^{;\\\\")
-                                                                        (point)))))
-            (setq ret (replace-regexp-in-string ";" "" ret))
-            (setq ret (replace-regexp-in-string "[ \n\t]+" " " ret))
-            (setq ret (replace-regexp-in-string "\\(^ \\| $\\)" "" ret))))
+          (setq ret (ac-etags-get-document-by-mode item b major-mode)))
       (when (and b (not (member b buffers)))
         (kill-buffer b)))
     ret))
 
+(defun ac-etags-get-document-by-mode (item buffer mode)
+  ;(message "DEBUG: ac-etags-get-document-for-mode, mode=%s, buffer=%s" mode buffer)
+  (let ((f (cadadr (assoc mode ac-etags-document-functions))))
+    (if f (funcall f item buffer)
+      nil)))
+
+(defun ac-etags-get-c-mode-document (item buffer)
+  "Return document for item in BUFFER."
+  (let ((doc ac-etags-document-not-found-message))
+    (with-current-buffer buffer
+      (setq line (thing-at-point 'line))
+      (when (string-match "(" line)
+        ;; This is probably a function.
+        (when (string= item (buffer-substring-no-properties
+                             (point)
+                             (save-excursion
+                               (skip-chars-forward "^(")
+                               (point))))
+          (forward-line -1))
+        (setq doc (buffer-substring-no-properties (point)
+                                                  (save-excursion (skip-chars-forward "^{;\\\\/")
+                                                                  (point))))))
+    (setq doc (replace-regexp-in-string ";" "" doc))
+    (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
+    (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))
+    doc))
+
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM."
-  (when ac-etags-need-document
+  (when ac-etags-use-document
     (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
       (when (stringp sig)
         (message "%s"sig))
