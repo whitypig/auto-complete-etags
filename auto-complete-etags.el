@@ -103,7 +103,7 @@ nil means there is no limit about it.")
           (nbutlast candidates (- len ac-etags-candidates-limit)))
         candidates)))
 
-;; @todo What to do when multiple tags matche item.
+;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
