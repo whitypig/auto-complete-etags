@@ -3,8 +3,11 @@
 
 ;; ac-etags-search-for-signature
 (defun test-ac-etags-search-for-signature (item)
-  (let ((ret nil) (major-mode 'c-mode))
+  (let ((ret nil) (major-mode 'c-mode) (org-name tags-file-name) (org-list tags-table-list))
+    (setq tags-file-name "./TAGS")
     (setq ret (ac-etags-search-for-signature item))
+    (setq tags-file-name org-name)
+    (setq tags-table-list org-list)
     ret))
 
 ;; Synopsis: (expect expected actual)
