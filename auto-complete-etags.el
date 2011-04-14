@@ -101,20 +101,40 @@ nil means there is no limit about it.")
           (nbutlast candidates (- len ac-etags-candidates-limit)))
         candidates)))
 
+;; @param item The name to be searched for in tagfile.
+;; @param tag-file The absolute pathname of tag-file to be visited.
+(defun ac-etags-get-tags-location (item tag-file)
+  (let ((b (find-file-noselect tag-file))
+        (loc nil) (filename nil) (linenum nil))
+    (unless b
+      (error "ac-etags: Cannot find file: %s" tag-file))
+    (unless (string-match "/" tag-file)
+      (erro "ac-etags: The name of tag file is not absolute"))
+    (save-excursion
+      (set-buffer b)
+      (goto-char (point-min))
+      (when (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
+        (setq linenum (string-to-number (match-string 1)))
+        ;; Search for the filename containing this item
+        (if (re-search-backward "^\\([^[:cntrl:]]+\\),[0-9]+$" nil t)
+            (setq filename (match-string 1))
+          (error "ac-etags: Cannot find the source file for tag \"%s\"" item))
+        (unless (file-name-absolute-p filename)
+          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))))
+    (if (and filename linenum)
+        (list filename linenum)
+      nil)))
+
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-signature (item)
   "Search for and return the signature for ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
-        (b nil) (line nil) (mode 'c-mode) (buffers (buffer-list))
-        ;; Shadow etags global variables because we don't want to change them.
-        (tags-location-ring (make-ring find-tag-marker-ring-length))
-        (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
-        (last-tag nil) (loc nil))
+         (loc nil) (mode major-mode))
     (unwind-protect
         (when tags-table-list
           (block found
-            (dolist (elt tags-table-list)
-              (setq loc (ac-etags-get-tags-location item elt))
+            (dolist (tagfile tags-table-list)
+              (setq loc (ac-etags-get-tags-location item tagfile))
               (when loc
                 (return-from found)))))
       ;; loc => (filename line-number)
@@ -122,11 +142,10 @@ nil means there is no limit about it.")
       (when loc
         (with-temp-buffer
           (insert-file-contents (car loc))
-          (setq ret (ac-etags-get-document-by-mode item (cadr loc) major-mode)))))
+          (setq ret (ac-etags-get-document-by-mode item (cadr loc) mode)))))
     ret))
 
 (defun ac-etags-get-document-by-mode (item linenum mode)
-  ;(message "DEBUG: ac-etags-get-document-for-mode, mode=%s, buffer=%s" mode buffer)
   (let ((f (cadadr (assoc mode ac-etags-document-functions))))
     (if f (funcall f item linenum)
       nil)))
@@ -157,15 +176,6 @@ nil means there is no limit about it.")
       (when (stringp sig)
         (message "%s"sig))
       sig)))
-
-(defun ac-etags-collect-buffers-by-major-mode (mode)
-  (let ((ret nil) (l (buffer-list)))
-    (dolist (b l)
-      (save-excursion
-        (set-buffer b)
-        (when (equal major-mode mode)
-          (add-to-list 'ret b))))
-    (nreverse ret)))
 
 ;; Define ac-source-etags
 (ac-define-source etags
