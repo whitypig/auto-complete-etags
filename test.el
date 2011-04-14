@@ -3,8 +3,9 @@
 
 ;; ac-etags-search-for-signature
 (defun test-ac-etags-search-for-signature (item)
-  (let ((ret nil) (major-mode 'c-mode) (org-name tags-file-name) (org-list tags-table-list))
-    (setq tags-file-name "./TAGS")
+  (let ((ret nil) (major-mode 'c-mode) (org-name tags-file-name) (org-list tags-table-list)
+        (tagfile (expand-file-name "./TAGS")))
+    (setq tags-table-list `(,tagfile))
     (setq ret (ac-etags-search-for-signature item))
     (setq tags-file-name org-name)
     (setq tags-table-list org-list)
@@ -43,15 +44,6 @@
   (expect (non-nil) (ac-etags-is-function-maybe "f" "f(int a,"))
   (expect nil (ac-etags-is-function-maybe "mcr" "#define mcr(e) #(e)"))
   (expect nil (ac-etags-is-function-maybe "g" "int g(void)\\")))
-
-;; Test for ac-etags-get-c-mode-document
-(defun test-ac-etags-get-c-mode-document (item)
-  (let ((b nil) (org-name tags-file-name) (ret nil)
-        (tags-file-name "./TAGS"))
-    (setq b (find-tag-noselect item nil t))
-    (setq ret (ac-etags-get-c-mode-document item b))
-    (setq tags-file-name org-name)
-    ret))
 
 (expectations
   (desc "Test for signature of a func-decl on single line")
