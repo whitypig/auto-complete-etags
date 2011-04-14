@@ -39,16 +39,6 @@
 (eval-when-compile
   (require 'cl))
 
-(defadvice ac-inline-hide (around ac-etags-ac-inline-hide-around-ad activate)
-  (when (and (member 'ac-source-etags ac-sources)
-             (eq ac-buffer (current-buffer)))
-    ad-do-it))
-
-(defadvice ac-put-prefix-overlay (around ac-etags-ac-put-prefix-overlay-around-ad activate)
-  (when (and (ac-inline-overlay)
-             (member 'ac-source-etags ac-sources)
-             (eq ac-buffer (current-buffer)))
-    ad-do-it))
 
 ;;;;##########################################################################
 ;;;;  User Options, Variables
