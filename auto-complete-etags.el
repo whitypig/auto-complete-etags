@@ -40,7 +40,13 @@
   (require 'cl))
 
 (defadvice ac-inline-hide (around ac-etags-ac-inline-hide-around-ad activate)
-  (when (and (member 'ac-source-etags 'ac-sources)
+  (when (and (member 'ac-source-etags ac-sources)
+             (eq ac-buffer (current-buffer)))
+    ad-do-it))
+
+(defadvice ac-put-prefix-overlay (around ac-etags-ac-put-prefix-overlay-around-ad activate)
+  (when (and (ac-inline-overlay)
+             (member 'ac-source-etags ac-sources)
              (eq ac-buffer (current-buffer)))
     ad-do-it))
 
@@ -60,7 +66,7 @@
   "The number of candidates to popup.
 nil means there is no limit about it.")
 
-(defvar ac-etags-use-document t
+(defvar ac-etags-use-document nil
   "Set this to t when you want to see sunction signatures.")
 
 (defvar ac-etags-tags-current-completion-table nil
