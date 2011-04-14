@@ -73,7 +73,7 @@ nil means there is no limit about it.")
 `tags-table-list is defined in etags.el'")
 
 (defvar ac-etags-document-functions
-  '((c-mode ac-etags-get-c-mode-document)))
+  '((c-mode . ac-etags-get-c-mode-document)))
 
 (defconst ac-etags-document-not-found-message "No documentaion found.")
 
@@ -109,37 +109,42 @@ nil means there is no limit about it.")
         ;; Shadow etags global variables because we don't want to change them.
         (tags-location-ring (make-ring find-tag-marker-ring-length))
         (find-tag-marker-ring (make-ring find-tag-marker-ring-length))
-        (last-tag nil))
+        (last-tag nil) (loc nil))
     (unwind-protect
-        (when (and tags-table-list
-                   (setq b (save-excursion (ignore-errors (find-tag-noselect item nil t)))))
-          (setq ret (ac-etags-get-document-by-mode item b major-mode)))
-      (when (and b (not (member b buffers)))
-        (kill-buffer b)))
+        (when tags-table-list
+          (block found
+            (dolist (elt tags-table-list)
+              (setq loc (ac-etags-get-tags-location item elt))
+              (when loc
+                (return-from found)))))
+      ;; loc => (filename line-number)
+      ;; filename should be an absolute path
+      (when loc
+        (with-temp-buffer
+          (insert-file-contents (car loc))
+          (setq ret (ac-etags-get-document-by-mode item (cadr loc) major-mode)))))
     ret))
 
-(defun ac-etags-get-document-by-mode (item buffer mode)
+(defun ac-etags-get-document-by-mode (item linenum mode)
   ;(message "DEBUG: ac-etags-get-document-for-mode, mode=%s, buffer=%s" mode buffer)
   (let ((f (cadadr (assoc mode ac-etags-document-functions))))
-    (if f (funcall f item buffer)
+    (if f (funcall f item linenum)
       nil)))
 
-(defun ac-etags-get-c-mode-document (item buffer)
+(defun ac-etags-get-c-mode-document (item linenm)
   "Return document for item in BUFFER."
-  (let ((doc ac-etags-document-not-found-message))
-    (with-current-buffer buffer
-      (setq line (thing-at-point 'line))
-      (when (string-match "(" line)
-        ;; This is probably a function.
-        (when (string= item (buffer-substring-no-properties
-                             (point)
-                             (save-excursion
-                               (skip-chars-forward "^(")
-                               (point))))
-          (forward-line -1))
-        (setq doc (buffer-substring-no-properties (point)
-                                                  (save-excursion (skip-chars-forward "^{;\\\\/")
-                                                                  (point))))))
+  (let ((doc ac-etags-document-not-found-message) (beg nil))
+    (goto-char (point-min))
+    (forward-line (1- linenum))
+    (setq line (thing-at-point 'line))
+    (unless (string-match item line)
+      (error "ac-etags: Cannot find %s" item))
+    (when (string-match (concat "^" item) line)
+      (forward-line -1))
+    (beginning-of-line)
+    (setq beg (point))
+    (skip-chars-forward "^{;\\\\/")
+    (setq doc (buffer-substring-no-properties beg (point)))
     (setq doc (replace-regexp-in-string ";" "" doc))
     (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
     (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))
