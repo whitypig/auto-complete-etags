@@ -77,6 +77,10 @@ nil means there is no limit about it.")
 
 (defconst ac-etags-document-not-found-message "No documentaion found.")
 
+;;;;##########################################################################
+;;;;  Functions
+;;;;##########################################################################
+
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
   (unless (and
@@ -126,7 +130,7 @@ nil means there is no limit about it.")
       nil)))
 
 ;; @todo What to do when multiple tags match item.
-(defun ac-etags-search-for-signature (item)
+(defun ac-etags-search-for-documentation (item)
   "Search for and return the signature for ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
          (loc nil) (mode major-mode))
@@ -151,7 +155,7 @@ nil means there is no limit about it.")
       nil)))
 
 (defun ac-etags-get-c-mode-document (item linenm)
-  "Return document for item in BUFFER."
+  "Return documentation about ITEM."
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (goto-char (point-min))
     (forward-line (1- linenum))
@@ -170,9 +174,10 @@ nil means there is no limit about it.")
     doc))
 
 (defun ac-etags-document (item)
-  "Return documentation corresponding to ITEM."
+  "Return documentation corresponding to ITEM. If no
+documentation is found, return nil."
   (when ac-etags-use-document
-    (let ((sig (ac-etags-search-for-signature (substring-no-properties item))))
+    (let ((sig (ac-etags-search-for-documentation (substring-no-properties item))))
       (when (stringp sig)
         (message "%s"sig))
       sig)))
