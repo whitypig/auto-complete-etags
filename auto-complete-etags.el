@@ -131,7 +131,7 @@ nil means there is no limit about it.")
 
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-documentation (item)
-  "Search for and return the signature for ITEM."
+  "Search for and return the documentation about ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
          (loc nil) (mode major-mode))
     (unwind-protect
@@ -143,32 +143,35 @@ nil means there is no limit about it.")
               (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
                 (return-from found)))))
       ;; loc => (filename line-number)
-      ;; filename should be an absolute path
+      ;; filename should be an absolute path.
+      (unless (file-name-absolute-p (car loc))
+        (error "ac-etags: %s is not an absolute pathname." (car loc)))
       (when loc
-        (with-temp-buffer
-          (insert-file-contents (car loc))
-          (setq ret (ac-etags-get-document-by-mode item (cadr loc) mode)))))
+        (setq ret (ac-etags-get-document-by-mode item loc mode))))
     ret))
 
-(defun ac-etags-get-document-by-mode (item linenum mode)
+(defun ac-etags-get-document-by-mode (item location mode)
   (let ((f (cadadr (assoc mode ac-etags-document-functions))))
-    (if f (funcall f item linenum)
+    (if f (funcall f item (car location) (cadr location))
       nil)))
 
-(defun ac-etags-get-c-mode-document (item linenm)
-  "Return documentation about ITEM."
+(defun ac-etags-get-c-mode-document (item filename linenum)
+  "Return documentation about ITEM defined in file FILENAME on
+line number LINENUM."
   (let ((doc ac-etags-document-not-found-message) (beg nil))
-    (goto-char (point-min))
-    (forward-line (1- linenum))
-    (setq line (thing-at-point 'line))
-    (unless (string-match item line)
-      (error "ac-etags: Cannot find %s" item))
-    (when (string-match (concat "^" item) line)
-      (forward-line -1))
-    (beginning-of-line)
-    (setq beg (point))
-    (skip-chars-forward "^{;\\\\/")
-    (setq doc (buffer-substring-no-properties beg (point)))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (goto-char (point-min))
+      (forward-line (1- linenum))
+      (setq line (thing-at-point 'line))
+      (unless (string-match item line)
+        (error "ac-etags: Cannot find %s" item))
+      (when (string-match (concat "^" item) line)
+        (forward-line -1))
+      (beginning-of-line)
+      (setq beg (point))
+      (skip-chars-forward "^{;\\\\/")
+      (setq doc (buffer-substring-no-properties beg (point))))
     (setq doc (replace-regexp-in-string ";" "" doc))
     (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
     (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))
