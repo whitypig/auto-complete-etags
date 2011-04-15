@@ -139,7 +139,8 @@ nil means there is no limit about it.")
           (block found
             (dolist (tagfile tags-table-list)
               (setq loc (ac-etags-get-tags-location item tagfile))
-              (when loc
+              ;; Check to see if this file is to be opened with the same major mode as MODE.
+              (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
                 (return-from found)))))
       ;; loc => (filename line-number)
       ;; filename should be an absolute path
