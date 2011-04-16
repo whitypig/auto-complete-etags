@@ -1,6 +1,23 @@
 (require 'auto-complete-etags)
 (require 'el-expectations)
 
+(eval-when-compile
+  (require 'cl))
+
+;; ac-etags-get-tags-location
+(expectations
+  (desc "Single location")
+  (expect `((,(expand-file-name "test.c") 1))
+    (ac-etags-get-tags-location "simple_func" (expand-file-name "c.TAGS")))
+
+  (desc "Multiple locatioins")
+  (expect `((,(expand-file-name "test.cc") 8) (,(expand-file-name "test.cc") 9))
+    (ac-etags-get-tags-location "overloaded_func" (expand-file-name "cc.TAGS")))
+
+  (desc "No entry")
+  (expect nil
+    (ac-etags-get-tags-location "none" (expand-file-name "cc.TAGS"))))
+
 ;; ac-etags-search-for-signature
 (defun test-ac-etags-search-for-documentation (mode item tagfile)
   (let ((ret nil) (major-mode mode) (org-name tags-file-name) (org-list tags-table-list)
