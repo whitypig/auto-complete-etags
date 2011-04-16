@@ -141,19 +141,33 @@ element is an abosolute pathname and cdr is line-number."
 (defun ac-etags-search-for-documentation (item)
   "Search for and return the documentation about ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
-         (loc nil) (mode major-mode))
+         (loc nil) (locs nil) (ll nil) (mode major-mode) (docs nil))
     (when tags-table-list
-      (block found
-        (dolist (tagfile tags-table-list)
-          (setq loc (ac-etags-get-tags-location item tagfile))
-          ;; Check to see if this file is to be opened with the same major mode as MODE.
-          (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
-            (return-from found)))))
-    ;; loc => (filename line-number)
-    ;; We try to find doc only when filename is an absolute pathname.
-    (when (and loc (stringp (car loc)) (file-name-absolute-p (car loc)))
-      (setq ret (ac-etags-get-document-by-mode item loc mode)))
+      (dolist (tagfile tags-table-list)
+        (setq ll (ac-etags-get-tags-location item tagfile))
+        ;; Check to see if this file is to be opened with the same major mode as MODE.
+        (dolist (l ll)
+          (when (and l (ac-etags-is-target-mode-p (car l) mode))
+            (add-to-list 'locs l))))
+      ;; locs => ((f1 l1) (f2 l2))
+      ;; We try to find doc only when filename is an absolute pathname.
+      (dolist (l locs)
+        (when (and l (stringp (car l)) (file-name-absolute-p (car l)))
+          (push (ac-etags-get-document-by-mode item l mode) docs)))
+      ;; Format docs
+      (when docs
+        (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
+        ;; Remove a trailing newline
+        (setq ret (replace-regexp-in-string "\n$" "" ret))))
     ret))
+
+;; @todo do unit test
+(defun ac-etags-is-target-mode-p (filename buffer-mode-name)
+  (let ((mode (assoc-default filename auto-mode-alist 'string-match)))
+    (cond
+     ((eq buffer-mode-name 'c++-mode)
+      (or (eq buffer-mode-name mode ) (string= "h" (file-name-extension filename))))
+     (t (eq buffer-mode-name mode)))))
 
 (defun ac-etags-get-document-by-mode (item location mode)
   (let ((f (cdr (assoc mode ac-etags-document-functions))))
@@ -225,9 +239,10 @@ line number LINENUM."
 documentation is found, return nil."
   (when ac-etags-use-document
     (let ((sig (ac-etags-search-for-documentation (substring-no-properties item))))
-      (when (stringp sig)
-        (message "%s"sig))
-      sig)))
+      (if (stringp sig)
+        sig
+        nil))))
+
 
 ;; Define ac-source-etags
 (ac-define-source etags
