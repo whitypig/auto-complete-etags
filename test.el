@@ -4,7 +4,7 @@
 ;; ac-etags-search-for-signature
 (defun test-ac-etags-search-for-documentation (item)
   (let ((ret nil) (major-mode 'c-mode) (org-name tags-file-name) (org-list tags-table-list)
-        (tagfile (expand-file-name "./TAGS")))
+        (tagfile (expand-file-name "./c.TAGS")))
     (setq tags-table-list `(,tagfile))
     (setq ret (ac-etags-search-for-documentation item))
     (setq tags-file-name org-name)
