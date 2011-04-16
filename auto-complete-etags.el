@@ -76,7 +76,8 @@ nil means there is no limit about it.")
 `tags-table-list is defined in etags.el'")
 
 (defvar ac-etags-document-functions
-  '((c-mode . ac-etags-get-c-mode-document)))
+  '((c-mode . ac-etags-get-c-mode-document)
+    (c++-mode . ac-etags-get-c++-mode-document)))
 
 (defconst ac-etags-document-not-found-message "No documentaion found.")
 
@@ -154,7 +155,7 @@ line-number."
     ret))
 
 (defun ac-etags-get-document-by-mode (item location mode)
-  (let ((f (cadadr (assoc mode ac-etags-document-functions))))
+  (let ((f (cdr (assoc mode ac-etags-document-functions))))
     (if f (funcall f item (car location) (cadr location))
       nil)))
 
@@ -185,7 +186,37 @@ line number LINENUM."
         (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
     doc))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; c-mode ends
+;; c-mode ends
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; c++-mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ac-etags-get-c++-mode-document (item filename linenum)
+  (let ((doc ac-etags-document-not-found-message) (beg nil))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (goto-char (point-min))
+      (forward-line (1- linenum))
+      (setq line (thing-at-point 'line))
+      (unless (string-match item line)
+        (error "ac-etags: Cannot find %s" item))
+      ;; We are concerned with only fucntion-like structures.
+      (when (string-match (concat item "(") line)
+        (when (string-match (concat "^" item) line)
+          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min))))
+        (beginning-of-line)
+        (setq beg (point))
+        (skip-chars-forward "^{;\\\\/")
+        (setq doc (buffer-substring-no-properties beg (point)))
+        (setq doc (replace-regexp-in-string ";" "" doc))
+        (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
+        (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
+    doc))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; c++-mode ends
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ac-etags-document (item)
