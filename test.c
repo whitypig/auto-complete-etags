@@ -21,3 +21,20 @@ multiple_line_va_arg_func(int a,
 {
   return NULL;
 }
+
+#define MACRO1
+#define MACRO2
+
+MACRO1
+MACRO2 const char *
+macro_func(int a)
+{
+  return NULL;
+}
+
+void
+old_style_func(a, b)
+  int a;
+  int b;
+{
+}
