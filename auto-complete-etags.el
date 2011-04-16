@@ -152,6 +152,9 @@ nil means there is no limit about it.")
     (if f (funcall f item (car location) (cadr location))
       nil)))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; c-mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun ac-etags-get-c-mode-document (item filename linenum)
   "Return documentation about ITEM defined in file FILENAME on
 line number LINENUM."
@@ -164,7 +167,7 @@ line number LINENUM."
       (unless (string-match item line)
         (error "ac-etags: Cannot find %s" item))
       ;; We are concerned with only fucntion-like structures.
-      (when (string-match (concat item ".*(") line)
+      (when (string-match (concat item "(") line)
         (when (string-match (concat "^" item) line)
           (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min))))
         (beginning-of-line)
@@ -175,6 +178,9 @@ line number LINENUM."
         (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
         (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
     doc))
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; c-mode ends
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ac-etags-document (item)
   "Return documentation corresponding to ITEM. If no

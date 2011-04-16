@@ -1,0 +1,7 @@
+
+test.cc,173
+class TestClass {TestClass1,0
+  void normal_func() {}normal_func3,26
+  int get() const { return 0; }get4,50
+  void set(int i) { i_ = i; }set5,82
+  int i_;i_11,213
