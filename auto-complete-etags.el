@@ -39,10 +39,9 @@
 (eval-when-compile
   (require 'cl))
 
-
-;;;;##########################################################################
-;;;;  User Options, Variables
-;;;;##########################################################################
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Faces
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defface ac-etags-candidate-face
   '((t (:background "gainsboro" :foreground "deep sky blue")))
@@ -51,6 +50,10 @@
 (defface ac-etags-selection-face
   '((t (:background "deep sky blue" :foreground "white")))
   "Face for the etags selected candidate.")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Variables and Constants
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defvar ac-etags-candidates-limit 40
   "The number of candidates to popup.
@@ -77,9 +80,9 @@ nil means there is no limit about it.")
 
 (defconst ac-etags-document-not-found-message "No documentaion found.")
 
-;;;;##########################################################################
-;;;;  Functions
-;;;;##########################################################################
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;  Functions
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
@@ -108,11 +111,14 @@ nil means there is no limit about it.")
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
 (defun ac-etags-get-tags-location (item tag-file)
+  "Return a list consisting of information with which we try to find
+definitions of ITEM. Its car is an abosolute pathname and its cadr is
+line-number."
   (let ((b (find-file-noselect tag-file))
         (loc nil) (filename nil) (linenum nil))
     (unless b
       (error "ac-etags: Cannot find file: %s" tag-file))
-    (unless (string-match "/" tag-file)
+    (unless (and (stringp tag-file) (file-name-absolute-p tag-file))
       (erro "ac-etags: The name of tag file is not absolute"))
     (save-excursion
       (set-buffer b)
@@ -153,7 +159,7 @@ nil means there is no limit about it.")
       nil)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; c-mode
+;;; For c-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun ac-etags-get-c-mode-document (item filename linenum)
   "Return documentation about ITEM defined in file FILENAME on
