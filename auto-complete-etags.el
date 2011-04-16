@@ -134,20 +134,19 @@ nil means there is no limit about it.")
   "Search for and return the documentation about ITEM."
   (let* ((ret "No documentation found.") (case-fold-search nil)
          (loc nil) (mode major-mode))
-    (unwind-protect
-        (when tags-table-list
-          (block found
-            (dolist (tagfile tags-table-list)
-              (setq loc (ac-etags-get-tags-location item tagfile))
-              ;; Check to see if this file is to be opened with the same major mode as MODE.
-              (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
-                (return-from found)))))
-      ;; loc => (filename line-number)
-      ;; filename should be an absolute path.
-      (when loc
-        (if (and (stringp (car loc)) (not (file-name-absolute-p (car loc))))
-            (error "ac-etags: %s is not an absolute pathname." (car loc))
-          (setq ret (ac-etags-get-document-by-mode item loc mode)))))
+    (when tags-table-list
+      (block found
+        (dolist (tagfile tags-table-list)
+          (setq loc (ac-etags-get-tags-location item tagfile))
+          ;; Check to see if this file is to be opened with the same major mode as MODE.
+          (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
+            (return-from found)))))
+    ;; loc => (filename line-number)
+    ;; filename should be an absolute path.
+    (when loc
+      (if (and (stringp (car loc)) (not (file-name-absolute-p (car loc))))
+          (error "ac-etags: %s is not an absolute pathname." (car loc))
+        (setq ret (ac-etags-get-document-by-mode item loc mode))))
     ret))
 
 (defun ac-etags-get-document-by-mode (item location mode)
