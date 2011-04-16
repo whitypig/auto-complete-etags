@@ -154,7 +154,7 @@ line-number."
     ret))
 
 (defun ac-etags-get-document-by-mode (item location mode)
-  (let ((f (cadadr (assoc mode ac-etags-document-functions))))
+  (let ((f (cdr (assoc mode ac-etags-document-functions))))
     (if f (funcall f item (car location) (cadr location))
       nil)))
 
