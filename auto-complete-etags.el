@@ -112,11 +112,11 @@ nil means there is no limit about it.")
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
 (defun ac-etags-get-tags-location (item tag-file)
-  "Return a list consisting of information with which we try to find
-definitions of ITEM. Its car is an abosolute pathname and its cadr is
-line-number."
+  "Return a list of lists, each list consisting of information
+with which we try to find definitions of ITEM. car of each
+element is an abosolute pathname and cdr is line-number."
   (let ((b (find-file-noselect tag-file))
-        (loc nil) (filename nil) (linenum nil))
+        (locs nil) (filename nil) (linenum nil))
     (unless b
       (error "ac-etags: Cannot find file: %s" tag-file))
     (unless (and (stringp tag-file) (file-name-absolute-p tag-file))
@@ -124,17 +124,18 @@ line-number."
     (save-excursion
       (set-buffer b)
       (goto-char (point-min))
-      (when (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
+      (while (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
         (setq linenum (string-to-number (match-string 1)))
         ;; Search for the filename containing this item
-        (if (re-search-backward "^\\([^[:cntrl:]]+\\),[0-9]+$" nil t)
-            (setq filename (match-string 1))
-          (error "ac-etags: Cannot find the source file for tag \"%s\"" item))
+        (save-excursion
+          (if (re-search-backward "^\\([^[:cntrl:]]+\\),[0-9]+$" nil t)
+              (setq filename (match-string 1))
+            (error "ac-etags: Cannot find the source file for tag \"%s\"" item)))
         (unless (file-name-absolute-p filename)
-          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))))
-    (if (and filename linenum)
-        (list filename linenum)
-      nil)))
+          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))
+        (if (and filename linenum)
+            (add-to-list 'locs (list filename linenum)))))
+    (nreverse locs)))
 
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-documentation (item)
