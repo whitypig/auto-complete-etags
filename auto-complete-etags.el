@@ -142,11 +142,9 @@ nil means there is no limit about it.")
           (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
             (return-from found)))))
     ;; loc => (filename line-number)
-    ;; filename should be an absolute path.
-    (when loc
-      (if (and (stringp (car loc)) (not (file-name-absolute-p (car loc))))
-          (error "ac-etags: %s is not an absolute pathname." (car loc))
-        (setq ret (ac-etags-get-document-by-mode item loc mode))))
+    ;; We try to find doc only when filename is an absolute pathname.
+    (when (and loc (stringp (car loc)) (file-name-absolute-p (car loc)))
+      (setq ret (ac-etags-get-document-by-mode item loc mode)))
     ret))
 
 (defun ac-etags-get-document-by-mode (item location mode)
