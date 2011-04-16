@@ -28,7 +28,16 @@
   (expect "const char* multiple_line_va_arg_func(int a, int b, ...)"
     (test-ac-etags-search-for-documentation "multiple_line_va_arg_func"))
 
+  (desc "Test for a function with macro")
+  (expect "MACRO1 MACRO2 const char * macro_func(int a)"
+    (test-ac-etags-search-for-documentation "macro_func"))
+
   (desc "No documentation found")
   (expect "No documentation found."
     (test-ac-etags-search-for-documentation "foo"))
+
+  ;; For now, we ignore old-style functions.
+  ;; (desc "Test for old-style function declaration")
+  ;; (expect "void old_style_func(a, b) int a; int b;"
+  ;;   (test-ac-etags-search-for-documentation "old_style_func"))
   )
