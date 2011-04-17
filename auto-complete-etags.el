@@ -78,7 +78,7 @@ nil means there is no limit about it.")
 (defvar ac-etags-document-functions
   '((c-mode . ac-etags-get-c-mode-document)))
 
-(defconst ac-etags-document-not-found-message "No documentaion found.")
+(defconst ac-etags-document-not-found-message "No documentation found.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Functions
