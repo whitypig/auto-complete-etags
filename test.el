@@ -2,10 +2,10 @@
 (require 'el-expectations)
 
 ;; ac-etags-search-for-signature
-(defun test-ac-etags-search-for-documentation (item tagfile)
+(defun test-ac-etags-search-for-documentation (item &optional tagfile)
   (let ((ret nil) (major-mode 'c-mode) (org-name tags-file-name) (org-list tags-table-list)
-        (tagfile (expand-file-name tagfile)))
-    (setq tags-table-list `(,tagfile))
+        (tagfile (and tagfile (expand-file-name tagfile))))
+    (and tagfile (setq tags-table-list `(,tagfile)))
     (setq ret (ac-etags-search-for-documentation item))
     (setq tags-file-name org-name)
     (setq tags-table-list org-list)
@@ -49,9 +49,24 @@
 (expectations
   (desc "Completing from c.TAGS")
   (expect "void simple_func(void)"
-    (test-ac-etags-search-for-documentation "simple_func" "c.TAGS"))
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (test-ac-etags-search-for-documentation "simple_func"))
 
   (desc "Completing from c.another.TAGS")
   (expect "static const char *g(void)"
-    (test-ac-etags-search-for-documentation "g" "c.another.TAGS"))
+    (visit-tags-table (expand-file-name "c.another.TAGS") t)
+    (test-ac-etags-search-for-documentation "g"))
+
+  ;; Switching again
+  (desc "Completing from c.TAGS")
+  (expect "const char* multiple_line_va_arg_func(int a, int b, ...)"
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (test-ac-etags-search-for-documentation "multiple_line_va_arg_func"))
   )
+
+;; Test for completion in the mode that is not the same as the source file.
+(expectations
+  (desc "Completing from .h file in emacs-lisp-mode.")
+  (expect nil
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (ac-etags-search-for-documentation "simple_func")))
