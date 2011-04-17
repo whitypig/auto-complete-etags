@@ -140,7 +140,7 @@ line-number."
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-documentation (item)
   "Search for and return the documentation about ITEM."
-  (let* ((ret "No documentation found.") (case-fold-search nil)
+  (let* ((ret ac-etags-document-not-found-message) (case-fold-search nil)
          (loc nil) (mode major-mode))
     (when tags-table-list
       (block found
