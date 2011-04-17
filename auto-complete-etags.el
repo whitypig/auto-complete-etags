@@ -92,6 +92,8 @@ nil means there is no limit about it.")
                   ac-etags-current-tags-table-list)
            (equal tags-file-name
                   ac-etags-current-tags-file-name))
+    ;; Invalidate the current completion table and create a new one.
+    (setq tags-completion-table nil)
     (setq ac-etags-tags-current-completion-table (tags-completion-table))
     (setq ac-etags-current-tags-file-name tags-file-name)
     (setq ac-etags-current-tags-table-list tags-table-list)))
