@@ -18,11 +18,11 @@
   (expect nil
     (ac-etags-get-tags-location "none" (expand-file-name "cc.TAGS"))))
 
-;; ac-etags-search-for-signature
-(defun test-ac-etags-search-for-documentation (mode item tagfile)
+;; Testing function for ac-etags-search-for-documentation
+(defun test-ac-etags-search-for-documentation (mode item &optional tagfile)
   (let ((ret nil) (major-mode mode) (org-name tags-file-name) (org-list tags-table-list)
-        (tagfile (expand-file-name tagfile)))
-    (setq tags-table-list `(,tagfile))
+        (tagfile (and tagfile (expand-file-name tagfile))))
+    (and tagfile (setq tags-table-list `(,tagfile)))
     (setq ret (ac-etags-search-for-documentation item))
     (setq tags-file-name org-name)
     (setq tags-table-list org-list)
@@ -60,6 +60,33 @@
   ;;   (test-ac-etags-search-for-documentation 'c-mode "old_style_func" "c.TAGS"))
   )
 
+;; Test when TAGS has changed.
+(expectations
+  (desc "Completing from c.TAGS")
+  (expect "void simple_func(void)"
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (test-ac-etags-search-for-documentation 'c-mode "simple_func"))
+
+  (desc "Completing from c.another.TAGS")
+  (expect "static const char *g(void)"
+    (visit-tags-table (expand-file-name "c.another.TAGS") t)
+    (test-ac-etags-search-for-documentation 'c-mode "g"))
+
+  ;; Switching again
+  (desc "Completing from c.TAGS")
+  (expect "const char* multiple_line_va_arg_func(int a, int b, ...)"
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (test-ac-etags-search-for-documentation 'c-mode "multiple_line_va_arg_func"))
+  )
+
+;; Test for completion in the mode that is not the same as the source file.
+(expectations
+  (desc "Completing from .h file in emacs-lisp-mode.")
+  (expect nil
+    (visit-tags-table (expand-file-name "c.TAGS") t)
+    (ac-etags-search-for-documentation "simple_func"))
+  )
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; c++-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -79,3 +106,39 @@
   (desc "Overloaded functions")
   (expect "void overloaded_func(int i)\nvoid overloaded_func(double d)"
     (test-ac-etags-search-for-documentation 'c++-mode "overloaded_func" "cc.TAGS")))
+
+;; test for ac-etags-is-target-mode-p
+(expectations
+  (desc "Current mode: c-mode, Filename: foo.c")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.c" 'c-mode))
+
+  (desc "Current mode: c-mode, Filename: foo.h")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.h" 'c-mode))
+
+  (desc "Current mode: c++-mode, Filename: bar.cc")
+  (expect t
+    (ac-etags-is-target-mode-p "bar.cc" 'c++-mode))
+
+  (desc "Current mode: c++-mode, Filename: bar.hh")
+  (expect t
+    (ac-etags-is-target-mode-p "bar.hh" 'c++-mode))
+
+  (desc "Current mdoe: c-mode, Filename: foo.cc")
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.cc" 'c-mode))
+
+  (desc "Current mode: c++-mode, Filename: foo.c")
+  ;; Should be t?
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.c" 'c++-mode))
+
+  (desc "Current mode: c++-mode, Filename: foo.h")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.h" 'c++-mode))
+
+  (desc "Current mode: lisp-mode, Filename: foo.c")
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.c" 'lisp-mode))
+  )

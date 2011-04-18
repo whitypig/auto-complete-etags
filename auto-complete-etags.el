@@ -79,12 +79,14 @@ nil means there is no limit about it.")
   '((c-mode . ac-etags-get-c-mode-document)
     (c++-mode . ac-etags-get-c++-mode-document)))
 
-(defconst ac-etags-document-not-found-message "No documentaion found.")
+(defconst ac-etags-document-not-found-message "No documentation found.")
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; @bug Even if the tag file has been updated,
+;; ac-etags-tags-current-completion-table won't be updated.
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
   (unless (and
@@ -93,9 +95,11 @@ nil means there is no limit about it.")
                   ac-etags-current-tags-table-list)
            (equal tags-file-name
                   ac-etags-current-tags-file-name))
-    (setq ac-etags-tags-current-completion-table (tags-completion-table))
-    (setq ac-etags-current-tags-file-name tags-file-name)
-    (setq ac-etags-current-tags-table-list tags-table-list)))
+    ;; When tags-file-name or list has changed, we create a new completion table.
+    (let ((tags-completion-table nil))
+      (setq ac-etags-tags-current-completion-table (tags-completion-table))
+      (setq ac-etags-current-tags-file-name tags-file-name)
+      (setq ac-etags-current-tags-table-list tags-table-list))))
 
 (defun ac-etags-candidate ()
   ;; These two variables are defined in `etags.el'
@@ -140,7 +144,7 @@ element is an abosolute pathname and cdr is line-number."
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-documentation (item)
   "Search for and return the documentation about ITEM."
-  (let* ((ret "No documentation found.") (case-fold-search nil)
+  (let* ((ret ac-etags-document-not-found-message) (case-fold-search nil)
          (loc nil) (locs nil) (ll nil) (mode major-mode) (docs nil))
     (when tags-table-list
       (dolist (tagfile tags-table-list)
@@ -156,12 +160,12 @@ element is an abosolute pathname and cdr is line-number."
           (push (ac-etags-get-document-by-mode item l mode) docs)))
       ;; Format docs
       (when docs
+        (delete-dups docs)
         (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
         ;; Remove a trailing newline
         (setq ret (replace-regexp-in-string "\n$" "" ret))))
     ret))
 
-;; @todo do unit test
 (defun ac-etags-is-target-mode-p (filename buffer-mode-name)
   (let ((mode (assoc-default filename auto-mode-alist 'string-match)))
     (cond
