@@ -59,9 +59,17 @@
   ;; (expect "void old_style_func(a, b) int a; int b;"
   ;;   (test-ac-etags-search-for-documentation 'c-mode "old_style_func" "c.TAGS"))
 
-  (desc "Test for a funtion following comment.")
+  (desc "Test for a multiple-line funtion following comment.")
   (expect "void comment_func(int a, int b)"
-    (test-ac-etags-search-for-documentation 'c-mode "comment_fnc" "c.TAGS"))
+    (test-ac-etags-search-for-documentation 'c-mode "comment_func" "c.TAGS"))
+
+  (desc "Test for a function follwing comment.")
+  (expect "const * char comment_func2(void)"
+    (test-ac-etags-search-for-documentation 'c-mode "comment_func2" "c.TAGS"))
+
+  (desc "Test for a crammed function.")
+  (expect "void crammed_func(void)"
+    (test-ac-etags-search-for-documentation 'c-mode "crammed_func" "c.TAGS"))
   )
 
 ;; Test when TAGS has changed.
