@@ -1,5 +1,5 @@
 
-test.c,335
+test.c,382
 void simple_func(void)simple_func1,0
 void simple_func2(int a,simple_func25,28
 multiple_line_func(void)multiple_line_func12,97
@@ -8,3 +8,4 @@ multiple_line_va_arg_func(int a,multiple_line_va_arg_func18,151
 #define MACRO2MACRO226,283
 macro_func(int a)macro_func30,326
 old_style_func(a, b)old_style_func36,369
+comment_func(int a, int b)comment_func45,465
