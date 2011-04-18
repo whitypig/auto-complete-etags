@@ -68,6 +68,7 @@
 ;; Test for completion in the mode that is not the same as the source file.
 (expectations
   (desc "Completing from .h file in emacs-lisp-mode.")
+  ;; Currently, this expect fails.
   (expect nil
     (visit-tags-table (expand-file-name "c.TAGS") t)
     (ac-etags-search-for-documentation "simple_func"))
