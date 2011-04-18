@@ -205,8 +205,7 @@ documentation is found, return nil."
   (when ac-etags-use-document
     (let ((sig (ac-etags-search-for-documentation (substring-no-properties item))))
       (when (stringp sig)
-        (message "%s"sig))
-      sig)))
+        sig))))
 
 ;; Define ac-source-etags
 (ac-define-source etags
