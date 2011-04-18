@@ -84,6 +84,8 @@ nil means there is no limit about it.")
 ;;  Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; @bug Even if the tag file has been updated,
+;; ac-etags-tags-current-completion-table won't be updated.
 (defun ac-etags-init ()
   "Initialization function for ac-etags."
   (unless (and
