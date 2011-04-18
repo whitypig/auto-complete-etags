@@ -76,7 +76,8 @@ nil means there is no limit about it.")
 `tags-table-list is defined in etags.el'")
 
 (defvar ac-etags-document-functions
-  '((c-mode . ac-etags-get-c-mode-document)))
+  '((c-mode . ac-etags-get-c-mode-document)
+    (c++-mode . ac-etags-get-c++-mode-document)))
 
 (defconst ac-etags-document-not-found-message "No documentation found.")
 
@@ -120,11 +121,11 @@ nil means there is no limit about it.")
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
 (defun ac-etags-get-tags-location (item tag-file)
-  "Return a list consisting of information with which we try to find
-definitions of ITEM. Its car is an abosolute pathname and its cadr is
-line-number."
+  "Return a list of lists, each list consisting of information
+with which we try to find definitions of ITEM. car of each
+element is an abosolute pathname and cdr is line-number."
   (let ((b (find-file-noselect tag-file))
-        (loc nil) (filename nil) (linenum nil))
+        (locs nil) (filename nil) (linenum nil))
     (unless b
       (error "ac-etags: Cannot find file: %s" tag-file))
     (unless (and (stringp tag-file) (file-name-absolute-p tag-file))
@@ -132,35 +133,50 @@ line-number."
     (save-excursion
       (set-buffer b)
       (goto-char (point-min))
-      (when (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
+      (while (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
         (setq linenum (string-to-number (match-string 1)))
         ;; Search for the filename containing this item
-        (if (re-search-backward "^\\([^[:cntrl:]]+\\),[0-9]+$" nil t)
-            (setq filename (match-string 1))
-          (error "ac-etags: Cannot find the source file for tag \"%s\"" item))
+        (save-excursion
+          (if (re-search-backward "^\\([^[:cntrl:]]+\\),[0-9]+$" nil t)
+              (setq filename (match-string 1))
+            (error "ac-etags: Cannot find the source file for tag \"%s\"" item)))
         (unless (file-name-absolute-p filename)
-          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))))
-    (if (and filename linenum)
-        (list filename linenum)
-      nil)))
+          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))
+        (if (and filename linenum)
+            (add-to-list 'locs (list filename linenum)))))
+    (nreverse locs)))
 
 ;; @todo What to do when multiple tags match item.
 (defun ac-etags-search-for-documentation (item)
   "Search for and return the documentation about ITEM."
   (let* ((ret ac-etags-document-not-found-message) (case-fold-search nil)
-         (loc nil) (mode major-mode))
+         (loc nil) (locs nil) (ll nil) (mode major-mode) (docs nil))
     (when tags-table-list
-      (block found
-        (dolist (tagfile tags-table-list)
-          (setq loc (ac-etags-get-tags-location item tagfile))
-          ;; Check to see if this file is to be opened with the same major mode as MODE.
-          (when (and loc (eq mode (assoc-default (car loc) auto-mode-alist 'string-match)))
-            (return-from found)))))
-    ;; loc => (filename line-number)
-    ;; We try to find doc only when filename is an absolute pathname.
-    (when (and loc (stringp (car loc)) (file-name-absolute-p (car loc)))
-      (setq ret (ac-etags-get-document-by-mode item loc mode)))
+      (dolist (tagfile tags-table-list)
+        (setq ll (ac-etags-get-tags-location item tagfile))
+        ;; Check to see if this file is to be opened with the same major mode as MODE.
+        (dolist (l ll)
+          (when (and l (ac-etags-is-target-mode-p (car l) mode))
+            (add-to-list 'locs l))))
+      ;; locs => ((f1 l1) (f2 l2))
+      ;; We try to find doc only when filename is an absolute pathname.
+      (dolist (l locs)
+        (when (and l (stringp (car l)) (file-name-absolute-p (car l)))
+          (push (ac-etags-get-document-by-mode item l mode) docs)))
+      ;; Format docs
+      (when docs
+        (delete-dups docs)
+        (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
+        ;; Remove a trailing newline
+        (setq ret (replace-regexp-in-string "\n$" "" ret))))
     ret))
+
+(defun ac-etags-is-target-mode-p (filename buffer-mode-name)
+  (let ((mode (assoc-default filename auto-mode-alist 'string-match)))
+    (cond
+     ((eq buffer-mode-name 'c++-mode)
+      (or (eq buffer-mode-name mode ) (string= "h" (file-name-extension filename))))
+     (t (eq buffer-mode-name mode)))))
 
 (defun ac-etags-get-document-by-mode (item location mode)
   (let ((f (cdr (assoc mode ac-etags-document-functions))))
@@ -194,7 +210,37 @@ line number LINENUM."
         (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
     doc))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;;; c-mode ends
+;; c-mode ends
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; c++-mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun ac-etags-get-c++-mode-document (item filename linenum)
+  (let ((doc ac-etags-document-not-found-message) (beg nil))
+    (with-temp-buffer
+      (insert-file-contents filename)
+      (goto-char (point-min))
+      (forward-line (1- linenum))
+      (setq line (thing-at-point 'line))
+      (unless (string-match item line)
+        (error "ac-etags: Cannot find %s" item))
+      ;; We are concerned with only fucntion-like structures.
+      (when (string-match (concat item "(") line)
+        (when (string-match (concat "^" item) line)
+          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min))))
+        (beginning-of-line)
+        (setq beg (point))
+        (skip-chars-forward "^{;\\\\/")
+        (setq doc (buffer-substring-no-properties beg (point)))
+        (setq doc (replace-regexp-in-string ";" "" doc))
+        (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
+        (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
+    doc))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; c++-mode ends
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun ac-etags-document (item)
@@ -202,8 +248,9 @@ line number LINENUM."
 documentation is found, return nil."
   (when ac-etags-use-document
     (let ((sig (ac-etags-search-for-documentation (substring-no-properties item))))
-      (when (stringp sig)
-        sig))))
+      (if (stringp sig)
+        sig
+        nil))))
 
 ;; Define ac-source-etags
 (ac-define-source etags

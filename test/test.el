@@ -4,6 +4,20 @@
 (eval-when-compile
   (require 'cl))
 
+;; ac-etags-get-tags-location
+(expectations
+  (desc "Single location")
+  (expect `((,(expand-file-name "test.c") 1))
+    (ac-etags-get-tags-location "simple_func" (expand-file-name "c.TAGS")))
+
+  (desc "Multiple locatioins")
+  (expect `((,(expand-file-name "test.cc") 8) (,(expand-file-name "test.cc") 9))
+    (ac-etags-get-tags-location "overloaded_func" (expand-file-name "cc.TAGS")))
+
+  (desc "No entry")
+  (expect nil
+    (ac-etags-get-tags-location "none" (expand-file-name "cc.TAGS"))))
+
 ;; Testing function for ac-etags-search-for-documentation
 (defun test-ac-etags-search-for-documentation (mode item &optional tagfile)
   (let ((ret nil) (major-mode mode) (org-name tags-file-name) (org-list tags-table-list)
@@ -72,4 +86,60 @@
   (expect nil
     (visit-tags-table (expand-file-name "c.TAGS") t)
     (ac-etags-search-for-documentation "simple_func"))
+  )
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; c++-mode
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(expectations
+  (desc "Normal function")
+  (expect "void normal_func()"
+    (test-ac-etags-search-for-documentation 'c++-mode "normal_func" "cc.TAGS"))
+
+  (desc "Getter")
+  (expect "int get() const"
+    (test-ac-etags-search-for-documentation 'c++-mode "get" "cc.TAGS"))
+
+  (desc "Setter")
+  (expect "void set(int i)"
+    (test-ac-etags-search-for-documentation 'c++-mode "set" "cc.TAGS"))
+
+  (desc "Overloaded functions")
+  (expect "void overloaded_func(int i)\nvoid overloaded_func(double d)"
+    (test-ac-etags-search-for-documentation 'c++-mode "overloaded_func" "cc.TAGS")))
+
+;; test for ac-etags-is-target-mode-p
+(expectations
+  (desc "Current mode: c-mode, Filename: foo.c")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.c" 'c-mode))
+
+  (desc "Current mode: c-mode, Filename: foo.h")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.h" 'c-mode))
+
+  (desc "Current mode: c++-mode, Filename: bar.cc")
+  (expect t
+    (ac-etags-is-target-mode-p "bar.cc" 'c++-mode))
+
+  (desc "Current mode: c++-mode, Filename: bar.hh")
+  (expect t
+    (ac-etags-is-target-mode-p "bar.hh" 'c++-mode))
+
+  (desc "Current mdoe: c-mode, Filename: foo.cc")
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.cc" 'c-mode))
+
+  (desc "Current mode: c++-mode, Filename: foo.c")
+  ;; Should be t?
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.c" 'c++-mode))
+
+  (desc "Current mode: c++-mode, Filename: foo.h")
+  (expect t
+    (ac-etags-is-target-mode-p "foo.h" 'c++-mode))
+
+  (desc "Current mode: lisp-mode, Filename: foo.c")
+  (expect nil
+    (ac-etags-is-target-mode-p "foo.c" 'lisp-mode))
   )
