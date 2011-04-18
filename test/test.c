@@ -38,3 +38,11 @@ old_style_func(a, b)
   int b;
 {
 }
+/*
+ * This is comment just before fucntion.
+ */
+void
+comment_func(int a, int b)
+{
+  /* do something */
+}
