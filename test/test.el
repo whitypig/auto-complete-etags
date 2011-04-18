@@ -58,6 +58,10 @@
   ;; (desc "Test for old-style function declaration")
   ;; (expect "void old_style_func(a, b) int a; int b;"
   ;;   (test-ac-etags-search-for-documentation 'c-mode "old_style_func" "c.TAGS"))
+
+  (desc "Test for a funtion following comment.")
+  (expect "void comment_func(int a, int b)"
+    (test-ac-etags-search-for-documentation 'c-mode "comment_fnc" "c.TAGS"))
   )
 
 ;; Test when TAGS has changed.
