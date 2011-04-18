@@ -46,3 +46,12 @@ comment_func(int a, int b)
 {
   /* do something */
 }
+/*
+ * This is comment just before fucntion.
+ */
+const * char comment_func2(void)
+{
+}
+void crammed_func(void)
+{
+}
