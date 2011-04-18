@@ -201,10 +201,14 @@ line number LINENUM."
         (error "ac-etags: Cannot find %s" item))
       ;; We are concerned with only fucntion-like structures.
       (when (string-match (concat item "(") line)
-        (when (string-match (concat "^" item) line)
-          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min))))
-        (beginning-of-line)
-        (setq beg (point))
+        (cond
+         ((string-match (concat "^" item) line)
+          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+          (goto-char (1+ (point)))
+          (setq beg (point)))
+         (t
+          (beginning-of-line)
+          (setq beg (point))))
         (skip-chars-forward "^{;\\\\/")
         (setq doc (buffer-substring-no-properties beg (point)))
         (setq doc (replace-regexp-in-string ";" "" doc))
@@ -219,6 +223,7 @@ line number LINENUM."
 ;; c++-mode
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; @todo Need to be refactored.
 (defun ac-etags-get-c++-mode-document (item filename linenum)
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (with-temp-buffer
@@ -230,10 +235,14 @@ line number LINENUM."
         (error "ac-etags: Cannot find %s" item))
       ;; We are concerned with only fucntion-like structures.
       (when (string-match (concat item "(") line)
-        (when (string-match (concat "^" item) line)
-          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min))))
-        (beginning-of-line)
-        (setq beg (point))
+        (cond
+         ((string-match (concat "^" item) line)
+          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+          (goto-char (1+ (point)))
+          (setq beg (point)))
+         (t
+          (beginning-of-line)
+          (setq beg (point))))
         (skip-chars-forward "^{;\\\\/")
         (setq doc (buffer-substring-no-properties beg (point)))
         (setq doc (replace-regexp-in-string ";" "" doc))
