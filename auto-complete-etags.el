@@ -166,6 +166,8 @@ element is an abosolute pathname and cdr is line-number."
       ;; Format docs
       (when docs
         (delete-dups docs)
+        (when (and (> (length docs) 1) (member ac-etags-document-not-found-message docs))
+          (setq docs (delete ac-etags-document-not-found-message docs)))
         (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
         ;; Remove a trailing newline
         (setq ret (replace-regexp-in-string "\n$" "" ret))))
