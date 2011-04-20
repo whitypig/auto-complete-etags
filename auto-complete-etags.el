@@ -141,7 +141,13 @@ element is an abosolute pathname and cdr is line-number."
               (setq filename (match-string 1))
             (error "ac-etags: Cannot find the source file for tag \"%s\"" item)))
         (unless (file-name-absolute-p filename)
-          (setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))
+          (setq filename (file-truename filename))
+          ;; Work around on a cygwin and window machine.
+          (when (and (eq system-type 'windows-nt)
+                     (string-match "\\([[:alpha:]]:/\\).*/cygdrive/[[:alpha:]]/\\(.*\\)"
+                                   filename))
+            (setq filename (concat (match-string 1 filename) (match-string 2 filename)))))
+          ;(setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))
         (if (and filename linenum)
             (add-to-list 'locs (list filename linenum)))))
     (nreverse locs)))
@@ -169,8 +175,8 @@ element is an abosolute pathname and cdr is line-number."
         (when (and (> (length docs) 1) (member ac-etags-document-not-found-message docs))
           (setq docs (delete ac-etags-document-not-found-message docs)))
         (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
-        ;; Remove a trailing newline
-        (setq ret (replace-regexp-in-string "\n$" "" ret))))
+        ;; Remove a trailing carriage-return and newline if any.
+        (setq ret (replace-regexp-in-string "[\r\n]+$" "" ret))))
     ret))
 
 (defun ac-etags-is-target-mode-p (filename buffer-mode-name)
@@ -193,7 +199,7 @@ element is an abosolute pathname and cdr is line-number."
 line number LINENUM."
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (with-temp-buffer
-      (insert-file-contents (expand-file-name filename))
+      (insert-file-contents-literally filename)
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
@@ -227,7 +233,7 @@ line number LINENUM."
 (defun ac-etags-get-c++-mode-document (item filename linenum)
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (with-temp-buffer
-      (insert-file-contents (expand-file-name filename))
+      (insert-file-contents-literally filename)
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
