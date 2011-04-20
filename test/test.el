@@ -4,19 +4,19 @@
 (eval-when-compile
   (require 'cl))
 
-;; ac-etags-get-tags-location
+;; ac-etags-get-item-location-in-tags
 (expectations
   (desc "Single location")
   (expect `((,(expand-file-name "test.c") 1))
-    (ac-etags-get-tags-location "simple_func" (expand-file-name "c.TAGS")))
+    (ac-etags-get-item-location-in-tags "simple_func" (expand-file-name "c.TAGS")))
 
   (desc "Multiple locatioins")
   (expect `((,(expand-file-name "test.cc") 8) (,(expand-file-name "test.cc") 9))
-    (ac-etags-get-tags-location "overloaded_func" (expand-file-name "cc.TAGS")))
+    (ac-etags-get-item-location-in-tags "overloaded_func" (expand-file-name "cc.TAGS")))
 
   (desc "No entry")
   (expect nil
-    (ac-etags-get-tags-location "none" (expand-file-name "cc.TAGS"))))
+    (ac-etags-get-item-location-in-tags "none" (expand-file-name "cc.TAGS"))))
 
 ;; Testing function for ac-etags-search-for-documentation
 (defun test-ac-etags-search-for-documentation (mode item &optional tagfile)
