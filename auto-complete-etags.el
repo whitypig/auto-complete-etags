@@ -153,8 +153,8 @@ element is an abosolute pathname and cdr is line-number."
          (loc nil) (locs nil) (ll nil) (mode major-mode) (docs nil))
     (when tags-table-list
       (dolist (tagfile tags-table-list)
-        (setq ll (ac-etags-get-tags-location item tagfile))
-        ;; Check to see if this file is to be opened with the same major mode as MODE.
+        (setq ll (ac-etags-get-item-location-in-tags item tagfile))
+        ;; Check to see if this file is to be opened with the related mode to MODE.
         (dolist (l ll)
           (when (and l (ac-etags-is-target-mode-p (car l) mode))
             (add-to-list 'locs l))))
