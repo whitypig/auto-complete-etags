@@ -120,7 +120,7 @@ nil means there is no limit about it.")
 
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
-(defun ac-etags-get-tags-location (item tag-file)
+(defun ac-etags-get-item-location-in-tags (item tag-file)
   "Return a list of lists, each list consisting of information
 with which we try to find definitions of ITEM. car of each
 element is an abosolute pathname and cdr is line-number."
@@ -193,7 +193,7 @@ element is an abosolute pathname and cdr is line-number."
 line number LINENUM."
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (with-temp-buffer
-      (insert-file-contents filename)
+      (insert-file-contents (expand-file-name filename))
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
@@ -227,7 +227,7 @@ line number LINENUM."
 (defun ac-etags-get-c++-mode-document (item filename linenum)
   (let ((doc ac-etags-document-not-found-message) (beg nil))
     (with-temp-buffer
-      (insert-file-contents filename)
+      (insert-file-contents (expand-file-name filename))
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
