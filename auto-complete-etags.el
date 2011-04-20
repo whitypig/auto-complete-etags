@@ -141,13 +141,12 @@ element is an abosolute pathname and cdr is line-number."
               (setq filename (match-string 1))
             (error "ac-etags: Cannot find the source file for tag \"%s\"" item)))
         (unless (file-name-absolute-p filename)
-          (setq filename (file-truename filename))
-          ;; Work around on a cygwin and window machine.
+          (setq filename (expand-file-name filename (file-name-directory tag-file)))
+          ;; Work around on a cygwin and windows machine.
           (when (and (eq system-type 'windows-nt)
                      (string-match "\\([[:alpha:]]:/\\).*/cygdrive/[[:alpha:]]/\\(.*\\)"
                                    filename))
             (setq filename (concat (match-string 1 filename) (match-string 2 filename)))))
-          ;(setq filename (replace-regexp-in-string "/[^/]+$" (concat "/" filename) tag-file t)))
         (if (and filename linenum)
             (add-to-list 'locs (list filename linenum)))))
     (nreverse locs)))
@@ -175,8 +174,8 @@ element is an abosolute pathname and cdr is line-number."
         (when (and (> (length docs) 1) (member ac-etags-document-not-found-message docs))
           (setq docs (delete ac-etags-document-not-found-message docs)))
         (setq ret (apply #'concat (mapcar (lambda (x) (concat x "\n")) docs)))
-        ;; Remove a trailing carriage-return and newline if any.
-        (setq ret (replace-regexp-in-string "[\r\n]+$" "" ret))))
+        ;; Remove a trailing carriage-return, newline, and space if any.
+        (setq ret (replace-regexp-in-string "[\r\n ]+$" "" ret))))
     ret))
 
 (defun ac-etags-is-target-mode-p (filename buffer-mode-name)
@@ -252,7 +251,7 @@ line number LINENUM."
         (skip-chars-forward "^{;\\\\/")
         (setq doc (buffer-substring-no-properties beg (point)))
         (setq doc (replace-regexp-in-string ";" "" doc))
-        (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
+        (setq doc (replace-regexp-in-string "[ \r\n\t]+" " " doc))
         (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
     doc))
 
