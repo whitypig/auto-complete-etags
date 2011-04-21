@@ -120,6 +120,12 @@
   (expect "void overloaded_func(int i)\nvoid overloaded_func(double d)"
     (test-ac-etags-search-for-documentation 'c++-mode "overloaded_func" "cc.TAGS")))
 
+;; Tests using Qt headers
+(expectations
+  (desc "replace in qbytearray.h and so on")
+  (expect "inline QByteArray &QByteArray::replace(char before, const char *c)\ninline QByteArray &QByteArray::replace(const QByteArray &before, const char *c)\ninline QByteArray &QByteArray::replace(const char *before, const char *after)\ninline typename QHash<Key, T>::iterator replace(const Key &key, const T &value)\ninline void QList<T>::replace(int i, const T &t)\ninline QT3_SUPPORT iterator replace(const Key &aKey, const T &aValue)\ninline typename QMap<Key, T>::iterator replace(const Key &key, const T &value)\ninline QT3_SUPPORT QString &replace(QChar c, const QString &after, bool cs)\ninline QT3_SUPPORT QString &replace(const QString &before, const QString &after, bool cs)\ninline QT3_SUPPORT QString &replace(char c, const QString &after, bool cs)\ninline QT3_SUPPORT QString &replace(char c, const QString &after, Qt::CaseSensitivity cs)\ninline QByteArray &QByteArray::replace(char c, const QString &after)\ninline QByteArray &QByteArray::replace(const QString &before, const char *after)\ninline QByteArray &QByteArray::replace(const QString &before, const QByteArray &after)\ninline void QVector<T>::replace(int i, const T &t)"
+    (test-ac-etags-search-for-documentation 'c++-mode "replace" "qt.TAGS")))
+
 ;; test for ac-etags-is-target-mode-p
 (expectations
   (desc "Current mode: c-mode, Filename: foo.c")
