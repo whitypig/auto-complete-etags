@@ -49,9 +49,11 @@ comment_func(int a, int b)
 /*
  * This is comment just before fucntion.
  */
-const * char comment_func2(void)
+const char * comment_func2(void)
 {
 }
 void crammed_func(void)
 {
 }
+
+enum { dummy1 = 1, dummy2, };
