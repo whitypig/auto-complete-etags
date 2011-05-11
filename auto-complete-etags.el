@@ -95,11 +95,12 @@ nil means there is no limit about it.")
                   ac-etags-current-tags-file-name)
            ;; We assume that tags-file-name and each file in
            ;; tags-table-list have their own existing buffers.
-           (or (null tags-file-name) (verify-visited-file-modtime (get-file-buffer tags-file-name)))
+           (or (null tags-file-name)
+               (verify-visited-file-modtime (get-file-buffer tags-file-name)))
            (or (null tags-table-list)
-               (null (member nil
-                             (mapcar #'verify-visited-file-modtime
-                                     (mapcar #'get-file-buffer tags-table-list))))))
+               (not (member nil
+                       (mapcar #'verify-visited-file-modtime
+                               (mapcar #'get-file-buffer tags-table-list))))))
     ;; When tags-file-name or list has changed, we create a new completion table.
     (let ((tags-completion-table nil))
       (setq ac-etags-tags-current-completion-table (tags-completion-table))
