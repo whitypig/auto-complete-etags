@@ -28,7 +28,7 @@
     (setq tags-table-list org-list)
     ret))
 
-;; Tests for ac-etags-search-for-signature
+;; Tests for ac-etags-search-for-documentation
 (expectations
   (desc "Test for signature of a func-decl on single line")
   (expect "void simple_func(void)"
