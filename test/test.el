@@ -91,6 +91,25 @@
     (test-ac-etags-search-for-documentation 'c-mode "multiple_line_va_arg_func"))
   )
 
+;; Tests for when TAGS file has been updated.
+(expectations
+  (desc "Test for the old tags file")
+  (expect "No documentation found."
+    (progn
+      (call-process "/usr/local/bin/ctags" nil nil nil "-e" "-f" "./c.TAGS" "test.c")
+      (test-ac-etags-search-for-documentation 'c-mode "updated_func" "c.TAGS")))
+  (expect "void simple_func(void)"
+    (test-ac-etags-search-for-documentation 'c-mode "simple_func" "c.TAGS"))
+  ;; Next, create tags file of updated source.
+  (desc "After having been updated TAGS file")
+  (expect "void simple_func(void)"
+    (test-ac-etags-search-for-documentation 'c-mode "simple_func" "c.TAGS"))
+  (expect "int updated_func(void)"
+    (progn
+      (sit-for 1)
+      (call-process "/usr/local/bin/ctags" nil nil nil "-e" "-f" "./c.TAGS" "test.updated.c")
+      (test-ac-etags-search-for-documentation 'c-mode "updated_func" "c.TAGS"))))
+
 ;; Test for completion in the mode that is not the same as the source file.
 (expectations
   (desc "Completing from .h file in emacs-lisp-mode.")
