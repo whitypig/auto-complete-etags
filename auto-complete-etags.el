@@ -237,9 +237,6 @@ line number LINENUM."
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
-      ;; BUG: When item is Foo::func and the line contains only
-      ;; func(), the following string-match fails, and even if there
-      ;; are some documentation in doc, error will be raised.
       ;; Strip a class name if any.
       (let ((i nil))
         (when (setq i (string-match "::" item))
