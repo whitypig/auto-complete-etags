@@ -240,23 +240,26 @@ line number LINENUM."
       ;; BUG: When item is Foo::func and the line contains only
       ;; func(), the following string-match fails, and even if there
       ;; are some documentation in doc, error will be raised.
-      (unless (string-match item line)
-        (error "ac-etags: Cannot find %s" item))
-      ;; We are concerned with only fucntion-like structures.
-      (when (string-match (concat item "(") line)
-        (cond
-         ((string-match (concat "^" item) line)
-          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
-          (goto-char (1+ (point)))
-          (setq beg (point)))
-         (t
-          (beginning-of-line)
-          (setq beg (point))))
-        (skip-chars-forward "^{;\\\\/")
-        (setq doc (buffer-substring-no-properties beg (point)))
-        (setq doc (replace-regexp-in-string ";" "" doc))
-        (setq doc (replace-regexp-in-string "[ \r\n\t]+" " " doc))
-        (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
+      ;; Strip a class name if any.
+      (let ((i nil))
+        (when (setq i (string-match "::" item))
+          (setq item (substring-no-properties item (+ 2 i)))))
+       (when (string-match item line)
+        ;; We are concerned with only fucntion-like structures.
+        (when (string-match (concat item "(") line)
+          (cond
+           ((string-match (concat "^" item) line)
+            (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+            (goto-char (1+ (point)))
+            (setq beg (point)))
+           (t
+            (beginning-of-line)
+            (setq beg (point))))
+          (skip-chars-forward "^{;\\\\/")
+          (setq doc (buffer-substring-no-properties beg (point)))
+          (setq doc (replace-regexp-in-string ";" "" doc))
+          (setq doc (replace-regexp-in-string "[ \r\n\t]+" " " doc))
+          (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc)))))
     doc))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
