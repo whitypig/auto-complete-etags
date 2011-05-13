@@ -137,7 +137,18 @@
 
   (desc "Overloaded functions")
   (expect "void overloaded_func(int i)\nvoid overloaded_func(double d)"
-    (test-ac-etags-search-for-documentation 'c++-mode "overloaded_func" "cc.TAGS")))
+    (test-ac-etags-search-for-documentation 'c++-mode "overloaded_func" "cc.TAGS"))
+
+  (desc "Names with classname qualifiers")
+  (expect "void normal_func()"
+    (test-ac-etags-search-for-documentation 'c++-mode "TestClass::normal_func" "cc.TAGS"))
+  (expect "int get() const"
+    (test-ac-etags-search-for-documentation 'c++-mode "TestClass::get" "cc.TAGS"))
+  (expect "void set(int i)"
+    (test-ac-etags-search-for-documentation 'c++-mode "TestClass::set" "cc.TAGS"))
+  (expect "void overloaded_func(int i)\nvoid overloaded_func(double d)"
+    (test-ac-etags-search-for-documentation 'c++-mode "TestClass::overloaded_func" "cc.TAGS"))
+  )
 
 ;; Tests using Qt headers
 (expectations
