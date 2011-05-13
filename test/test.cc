@@ -7,8 +7,7 @@ public:
   // overloaded functions
   void overloaded_func(int i);
   void overloaded_func(double d);
+
 private:
   int i_;
 };
-
-
