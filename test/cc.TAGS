@@ -11,5 +11,5 @@ class TestClass {TestClass1,0
   void overloaded_func(int i);TestClass::overloaded_func8,139
   void overloaded_func(double d);overloaded_func9,170
   void overloaded_func(double d);TestClass::overloaded_func9,170
-  int i_;i_11,213
-  int i_;TestClass::i_11,213
+  int i_;i_12,214
+  int i_;TestClass::i_12,214
