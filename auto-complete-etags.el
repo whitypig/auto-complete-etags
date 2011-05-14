@@ -203,23 +203,22 @@ line number LINENUM."
       (goto-char (point-min))
       (forward-line (1- linenum))
       (setq line (thing-at-point 'line))
-      (unless (string-match item line)
-        (error "ac-etags: Cannot find %s" item))
-      ;; We are concerned with only fucntion-like structures.
-      (when (string-match (concat item "(") line)
-        (cond
-         ((string-match (concat "^" item) line)
-          (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
-          (goto-char (1+ (point)))
-          (setq beg (point)))
-         (t
-          (beginning-of-line)
-          (setq beg (point))))
-        (skip-chars-forward "^{;\\\\/")
-        (setq doc (buffer-substring-no-properties beg (point)))
-        (setq doc (replace-regexp-in-string ";" "" doc))
-        (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
-        (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
+      (when (string-match item line)
+        ;; We are concerned with only fucntion-like structures.
+        (when (string-match (concat item "(") line)
+          (cond
+           ((string-match (concat "^" item) line)
+            (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+            (goto-char (1+ (point)))
+            (setq beg (point)))
+           (t
+            (beginning-of-line)
+            (setq beg (point))))
+          (skip-chars-forward "^{;\\\\/")
+          (setq doc (buffer-substring-no-properties beg (point))))
+          (setq doc (replace-regexp-in-string ";" "" doc))
+          (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
+          (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
     doc))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; c-mode ends
