@@ -64,7 +64,7 @@
     (test-ac-etags-search-for-documentation 'c-mode "comment_func" "c.TAGS"))
 
   (desc "Test for a function follwing comment.")
-  (expect "const * char comment_func2(void)"
+  (expect "const char * comment_func2(void)"
     (test-ac-etags-search-for-documentation 'c-mode "comment_func2" "c.TAGS"))
 
   (desc "Test for a crammed function.")
