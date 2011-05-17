@@ -112,12 +112,12 @@ nil means there is no limit about it.")
   (when (or tags-file-name tags-table-list)
     ;; If at least one tags table is selected, initialize completion table.
     (ac-etags-init)
-      (let* ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
-            (len (length candidates)))
-        (when (and (numberp ac-etags-candidates-limit)
-                    (< ac-etags-candidates-limit len))
-          (nbutlast candidates (- len ac-etags-candidates-limit)))
-        candidates)))
+    (let* ((candidates (all-completions ac-target ac-etags-tags-current-completion-table))
+           (len (length candidates)))
+      (when (and (numberp ac-etags-candidates-limit)
+                 (< ac-etags-candidates-limit len))
+        (nbutlast candidates (- len ac-etags-candidates-limit)))
+      candidates)))
 
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
