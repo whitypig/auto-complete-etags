@@ -81,6 +81,9 @@ nil means there is no limit about it.")
 
 (defconst ac-etags-document-not-found-message "No documentation found.")
 
+(defvar ac-etags-prefix-functions
+  '((c++-mode . ac-etags-prefix-c++-mode)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;  Functions
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -119,6 +122,11 @@ nil means there is no limit about it.")
                  (< ac-etags-candidates-limit len))
         (nbutlast candidates (- len ac-etags-candidates-limit)))
       candidates)))
+
+(defun ac-etags-prefix ()
+  (or (and (assoc major-mode ac-etags-prefix-functions)
+           (funcall (cdr (assoc major-mode ac-etags-prefix-functions))))
+      (ac-prefix-symbol)))
 
 ;; @param item The name to be searched for in tagfile.
 ;; @param tag-file The absolute pathname of tag-file to be visited.
@@ -259,6 +267,31 @@ line number LINENUM."
           (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc)))))
     doc))
 
+(defun ac-etags-prefix-c++-mode ()
+  (let ((c (char-before)))
+    (cond
+     ;; Has just entered `::'
+     ((and (char-equal c ?:)
+           (char-equal (char-before (1- (point))) ?:))
+      (save-excursion
+        (skip-chars-backward "^ \t" (save-excursion
+                                      (beginning-of-line)
+                                      (point)))
+        (point)))
+     ;; There is `::' on the currently-editing line
+     ((save-excursion (re-search-backward "::"
+                                          (save-excursion
+                                            (skip-chars-backward "^ \t" (save-excursion
+                                                                          (beginning-of-line)
+                                                                          (point)))
+                                            (point))
+                                          t))
+      (save-excursion (skip-chars-backward "^ \t" (save-excursion
+                                                    (beginning-of-line)
+                                                    (point)))
+                      (point)))
+     (t nil))))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; c++-mode ends
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -278,7 +311,8 @@ documentation is found, return nil."
     (candidate-face . ac-etags-candidate-face)
     (selection-face . ac-etags-selection-face)
     (document . ac-etags-document)
-    (requires . 2)))
+    (requires . 2)
+    (prefix . ac-etags-prefix)))
 
 (provide 'auto-complete-etags)
 ;;; auto-complete-etags.el ends here
