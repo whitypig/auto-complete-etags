@@ -272,6 +272,7 @@ line number LINENUM."
     (cond
      ;; Has just entered `::'
      ((and (char-equal c ?:)
+           (char-before (1- (point)))
            (char-equal (char-before (1- (point))) ?:))
       (save-excursion
         (skip-chars-backward "^ \t" (save-excursion
