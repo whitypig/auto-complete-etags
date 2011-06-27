@@ -276,7 +276,7 @@ line number LINENUM."
       (when (and (char-before (1- (point)))
                  (char-equal (char-before (1- (point))) ?:))
         (save-excursion
-          (skip-chars-backward "^ \t" bol)
+          (skip-chars-backward "^ \t;()" bol)
           (if (and (= (point) bol)
                    (ac-etags-double-colon-p (point)))
               (+ 2 (point))
@@ -286,11 +286,11 @@ line number LINENUM."
      ((save-excursion
         (re-search-backward "::"
                             (save-excursion
-                              (skip-chars-backward "^ \t" bol)
+                              (skip-chars-backward "^ \t;()" bol)
                               (point))
                             t))
       (save-excursion
-        (skip-chars-backward "^ \t" bol)
+        (skip-chars-backward "^ \t;()" bol)
         (if (ac-etags-double-colon-p (point))
             (+ 2 (point))
           (point))))
