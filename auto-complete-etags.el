@@ -268,29 +268,32 @@ line number LINENUM."
     doc))
 
 (defun ac-etags-prefix-c++-mode ()
-  (let ((c (char-before)))
+  (let ((c (char-before))
+        (bol (save-excursion (beginning-of-line) (point))))
     (cond
-     ;; Has just entered `::'
-     ((and (char-equal c ?:)
-           (char-before (1- (point)))
-           (char-equal (char-before (1- (point))) ?:))
+     ((char-equal c ?:)
+      ;; Has just entered `::' ?
+      (when (and (char-before (1- (point)))
+                 (char-equal (char-before (1- (point))) ?:))
+        (save-excursion
+          (skip-chars-backward "^ \t" bol)
+          (if (= (point) bol)
+              (+ 2 (point))
+            (point)))))
+     ;; There is `::' on the currently-editing line,
+     ;; and has just entered a character other than `:'.
+     ((save-excursion
+        (re-search-backward "::"
+                            (save-excursion
+                              (skip-chars-backward "^ \t" bol)
+                              (point))
+                            t))
       (save-excursion
-        (skip-chars-backward "^ \t" (save-excursion
-                                      (beginning-of-line)
-                                      (point)))
-        (point)))
-     ;; There is `::' on the currently-editing line
-     ((save-excursion (re-search-backward "::"
-                                          (save-excursion
-                                            (skip-chars-backward "^ \t" (save-excursion
-                                                                          (beginning-of-line)
-                                                                          (point)))
-                                            (point))
-                                          t))
-      (save-excursion (skip-chars-backward "^ \t" (save-excursion
-                                                    (beginning-of-line)
-                                                    (point)))
-                      (point)))
+        (skip-chars-backward "^ \t" bol)
+        (if (and (char-equal (char-after (point)) ?:)
+                 (char-equal (char-after (1+ (point))) ?:))
+            (+ 2 (point))
+          (point))))
      (t nil))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
