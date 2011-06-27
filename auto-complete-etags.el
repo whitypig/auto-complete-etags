@@ -277,7 +277,8 @@ line number LINENUM."
                  (char-equal (char-before (1- (point))) ?:))
         (save-excursion
           (skip-chars-backward "^ \t" bol)
-          (if (= (point) bol)
+          (if (and (= (point) bol)
+                   (ac-etags-double-colon-p (point)))
               (+ 2 (point))
             (point)))))
      ;; There is `::' on the currently-editing line,
@@ -290,11 +291,19 @@ line number LINENUM."
                             t))
       (save-excursion
         (skip-chars-backward "^ \t" bol)
-        (if (and (char-equal (char-after (point)) ?:)
-                 (char-equal (char-after (1+ (point))) ?:))
+        (if (ac-etags-double-colon-p (point))
             (+ 2 (point))
           (point))))
      (t nil))))
+
+(defun ac-etags-double-colon-p (pos)
+  "Return t if characters at position POS and POS+1 are colons."
+  (let ((c1 (char-after pos))
+        (c2 (char-after (1+ pos))))
+    (and (characterp c1)
+         (characterp c2)
+         (char-equal c1 ?:)
+         (char-equal c2 ?:))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; c++-mode ends
