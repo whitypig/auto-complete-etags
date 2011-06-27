@@ -276,7 +276,7 @@ line number LINENUM."
       (when (and (char-before (1- (point)))
                  (char-equal (char-before (1- (point))) ?:))
         (save-excursion
-          (skip-chars-backward "^ \t;()" bol)
+          (ac-etags-skip-backward-delim)
           (if (and (= (point) bol)
                    (ac-etags-double-colon-p (point)))
               (+ 2 (point))
@@ -286,15 +286,19 @@ line number LINENUM."
      ((save-excursion
         (re-search-backward "::"
                             (save-excursion
-                              (skip-chars-backward "^ \t;()" bol)
+                              (ac-etags-skip-backward-delim)
                               (point))
                             t))
       (save-excursion
-        (skip-chars-backward "^ \t;()" bol)
+        (ac-etags-skip-backward-delim)
         (if (ac-etags-double-colon-p (point))
             (+ 2 (point))
           (point))))
      (t nil))))
+
+(defun ac-etags-skip-backward-delim ()
+  (let ((bol (save-excursion (beginning-of-line) (point))))
+    (skip-chars-backward "^ \t;()" bol)))
 
 (defun ac-etags-double-colon-p (pos)
   "Return t if characters at position POS and POS+1 are colons."
