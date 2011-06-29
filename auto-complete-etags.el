@@ -271,7 +271,7 @@ line number LINENUM."
   (let ((c (char-before))
         (bol (save-excursion (beginning-of-line) (point))))
     (cond
-     ((char-equal c ?:)
+     ((and (characterp c) (char-equal c ?:))
       ;; Has just entered `::' ?
       (when (and (char-before (1- (point)))
                  (char-equal (char-before (1- (point))) ?:))
