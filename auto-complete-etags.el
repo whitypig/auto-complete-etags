@@ -121,7 +121,17 @@ nil means there is no limit about it.")
       (when (and (numberp ac-etags-candidates-limit)
                  (< ac-etags-candidates-limit len))
         (nbutlast candidates (- len ac-etags-candidates-limit)))
-      candidates)))
+      (append (ac-etags-same-mode-candidate)
+              (ac-etags-buffer-dictionary-candidate)
+              candidates))))
+
+(defun ac-etags-same-mode-candidate ()
+  (ac-word-candidates
+   (lambda (buffer)
+     (derived-mode-p (buffer-local-value 'major-mode buffer)))))
+
+(defun ac-etags-buffer-dictionary-candidate ()
+  (ac-buffer-dictionary))
 
 (defun ac-etags-prefix ()
   (or (and (assoc major-mode ac-etags-prefix-functions)
