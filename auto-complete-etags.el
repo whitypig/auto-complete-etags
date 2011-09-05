@@ -308,7 +308,7 @@ line number LINENUM."
 
 (defun ac-etags-skip-backward-delim ()
   (let ((bol (save-excursion (beginning-of-line) (point))))
-    (skip-chars-backward "^ \t;()" bol)))
+    (skip-chars-backward "^ \t;()<>" bol)))
 
 (defun ac-etags-double-colon-p (pos)
   "Return t if characters at position POS and POS+1 are colons."
