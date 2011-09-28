@@ -1,4 +1,4 @@
-;;; auto-complete-etags.el --- 
+;;; auto-complete-etags.el ---
 
 ;; Copyright 2009 Yen-Chin,Lee
 ;;           2010, 2011 whitypig <whitypig@gmail.com>
@@ -28,7 +28,7 @@
 ;; BUG: Source file which has searching tag is somehow modified.
 ;; BUG: After showing document, extra new lines are inserted in the current buffer.
 ;; BUG: Unnecessary marks are set.
-;; 
+;;
 
 ;; Put this file into your load-path and the following into your ~/.emacs:
 ;;   (require 'auto-complete-etags)
