@@ -35,9 +35,15 @@
 
 ;;; Code:
 
-(require 'auto-complete)
 (eval-when-compile
   (require 'cl))
+
+(require 'auto-complete)
+(require 'etags)
+
+(defgroup auto-complete-etags nil
+  "Auto completion with ETAGS"
+  :group 'auto-complete)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Faces
@@ -45,11 +51,13 @@
 
 (defface ac-etags-candidate-face
   '((t (:background "gainsboro" :foreground "deep sky blue")))
-  "Face for etags candidate")
+  "Face for etags candidate"
+  :group 'auto-complete-etags)
 
 (defface ac-etags-selection-face
   '((t (:background "deep sky blue" :foreground "white")))
-  "Face for the etags selected candidate.")
+  "Face for the etags selected candidate."
+  :group 'auto-complete-etags)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables and Constants
@@ -149,9 +157,8 @@ element is an abosolute pathname and cdr is line-number."
     (unless b
       (error "ac-etags: Cannot find file: %s" tag-file))
     (unless (and (stringp tag-file) (file-name-absolute-p tag-file))
-      (erro "ac-etags: The name of tag file is not absolute"))
-    (save-excursion
-      (set-buffer b)
+      (error "ac-etags: The name of tag file is not absolute"))
+    (with-current-buffer b
       (goto-char (point-min))
       (while (re-search-forward (concat "" item "\\([0-9]+\\),[0-9]+$") nil t)
         (setq linenum (string-to-number (match-string 1)))
@@ -221,23 +228,23 @@ line number LINENUM."
       (insert-file-contents-literally filename)
       (goto-char (point-min))
       (forward-line (1- linenum))
-      (setq line (thing-at-point 'line))
-      (when (string-match item line)
-        ;; We are concerned with only fucntion-like structures.
-        (when (string-match (concat item "(") line)
-          (cond
-           ((string-match (concat "^" item) line)
-            (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
-            (goto-char (1+ (point)))
-            (setq beg (point)))
-           (t
-            (beginning-of-line)
-            (setq beg (point))))
-          (skip-chars-forward "^{;\\\\/")
-          (setq doc (buffer-substring-no-properties beg (point))))
+      (let ((line (thing-at-point 'line)))
+        (when (string-match item line)
+          ;; We are concerned with only fucntion-like structures.
+          (when (string-match (concat item "(") line)
+            (cond
+             ((string-match (concat "^" item) line)
+              (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+              (goto-char (1+ (point)))
+              (setq beg (point)))
+             (t
+              (beginning-of-line)
+              (setq beg (point))))
+            (skip-chars-forward "^{;\\\\/")
+            (setq doc (buffer-substring-no-properties beg (point))))
           (setq doc (replace-regexp-in-string ";" "" doc))
           (setq doc (replace-regexp-in-string "[ \n\t]+" " " doc))
-          (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))
+          (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc)))))
     doc))
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; c-mode ends
@@ -254,27 +261,27 @@ line number LINENUM."
       (insert-file-contents-literally filename)
       (goto-char (point-min))
       (forward-line (1- linenum))
-      (setq line (thing-at-point 'line))
-      ;; Strip a class name if any.
-      (let ((i nil))
-        (when (setq i (string-match "::" item))
-          (setq item (substring-no-properties item (+ 2 i)))))
-       (when (string-match item line)
-        ;; We are concerned with only fucntion-like structures.
-        (when (string-match (concat item "(") line)
-          (cond
-           ((string-match (concat "^" item) line)
-            (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
-            (goto-char (1+ (point)))
-            (setq beg (point)))
-           (t
-            (beginning-of-line)
-            (setq beg (point))))
-          (skip-chars-forward "^{;\\\\/")
-          (setq doc (buffer-substring-no-properties beg (point)))
-          (setq doc (replace-regexp-in-string ";" "" doc))
-          (setq doc (replace-regexp-in-string "[ \r\n\t]+" " " doc))
-          (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc)))))
+      (let ((line (thing-at-point 'line)))
+        ;; Strip a class name if any.
+        (let ((i nil))
+          (when (setq i (string-match "::" item))
+            (setq item (substring-no-properties item (+ 2 i)))))
+        (when (string-match item line)
+          ;; We are concerned with only fucntion-like structures.
+          (when (string-match (concat item "(") line)
+            (cond
+             ((string-match (concat "^" item) line)
+              (or (re-search-backward "\\([};/]\\|^$\\)" nil t) (goto-char (point-min)))
+              (goto-char (1+ (point)))
+              (setq beg (point)))
+             (t
+              (beginning-of-line)
+              (setq beg (point))))
+            (skip-chars-forward "^{;\\\\/")
+            (setq doc (buffer-substring-no-properties beg (point)))
+            (setq doc (replace-regexp-in-string ";" "" doc))
+            (setq doc (replace-regexp-in-string "[ \r\n\t]+" " " doc))
+            (setq doc (replace-regexp-in-string "\\(^ \\| $\\)" "" doc))))))
     doc))
 
 (defun ac-etags-prefix-c++-mode ()
